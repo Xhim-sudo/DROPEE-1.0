@@ -20,21 +20,28 @@ export const calculateDeliveryFee = (
   weight: number,
   weather: string
 ): DeliveryFees => {
+  // Use parameters from defaultFeeParams
+  const params = defaultFeeParams;
+  
   // Base fee
-  const baseFee = 100;
+  const baseFee = params.baseRate;
   
-  // Distance fee calculation (₹10 per km after first 3km)
-  const distanceFee = distance > 3 ? Math.round((distance - 3) * 10) : 0;
+  // Distance fee calculation (rate per km after threshold)
+  const distanceFee = distance > params.freeDistanceThreshold 
+    ? Math.round((distance - params.freeDistanceThreshold) * params.distanceRatePerKm) 
+    : 0;
   
-  // Weight fee calculation (₹20 per kg after first 5kg)
-  const weightFee = weight > 5 ? Math.round((weight - 5) * 20) : 0;
+  // Weight fee calculation (rate per kg after threshold)
+  const weightFee = weight > params.freeWeightThreshold 
+    ? Math.round((weight - params.freeWeightThreshold) * params.weightRatePerKg) 
+    : 0;
   
   // Weather fee calculation
   let weatherFee = 0;
   if (weather === 'rainy') {
-    weatherFee = 30; // Additional ₹30 for rainy weather
+    weatherFee = params.rainyWeatherFee;
   } else if (weather === 'extreme') {
-    weatherFee = 50; // Additional ₹50 for extreme weather
+    weatherFee = params.extremeWeatherFee;
   }
   
   // Calculate total fee
