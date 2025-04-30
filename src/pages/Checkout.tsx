@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,8 @@ import PageHeader from '@/components/PageHeader';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useCart } from '@/context/CartContext';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, CloudRain, CloudSun, Weight, MapPin } from 'lucide-react';
+import { calculateDeliveryFee } from '@/utils/deliveryUtils';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -41,6 +42,24 @@ const Checkout = () => {
     paymentMethod: 'cash'
   });
   
+  // New states for delivery fee calculation
+  const [distance, setDistance] = useState(3); // in km
+  const [weight, setWeight] = useState(1); // in kg
+  const [weather, setWeather] = useState('normal'); // normal, rainy, extreme
+  const [deliveryFees, setDeliveryFees] = useState({
+    baseFee: 100,
+    distanceFee: 0,
+    weightFee: 0,
+    weatherFee: 0,
+    totalFee: 100
+  });
+  
+  // Calculate delivery fees when factors change
+  useEffect(() => {
+    const fees = calculateDeliveryFee(distance, weight, weather);
+    setDeliveryFees(fees);
+  }, [distance, weight, weather]);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -48,6 +67,18 @@ const Checkout = () => {
   
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleWeatherChange = (value: string) => {
+    setWeather(value);
+  };
+  
+  const handleNumberChange = (name: string, value: string) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      if (name === 'distance') setDistance(numValue);
+      if (name === 'weight') setWeight(numValue);
+    }
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,8 +103,8 @@ const Checkout = () => {
   
   // Calculate totals
   const subtotal = getSubtotal();
-  const deliveryFee = 100;
-  const total = subtotal + deliveryFee;
+  const deliveryFee = deliveryFees.totalFee;
+  const total = subtotal + deliveryFee + (formData.deliveryOption === 'third-party' ? 50 : 0);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -154,6 +185,80 @@ const Checkout = () => {
                         onChange={handleChange}
                       />
                     </div>
+
+                    {/* Delivery Details - New section for distance and weight */}
+                    <div className="border-t pt-4 mt-2">
+                      <h3 className="text-lg font-medium mb-3">Delivery Factors</h3>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <Label htmlFor="distance">Distance (km)</Label>
+                          </div>
+                          <Input
+                            id="distance"
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={distance}
+                            onChange={(e) => handleNumberChange('distance', e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Distance between vendor and delivery address
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Weight className="h-4 w-4" />
+                            <Label htmlFor="weight">Package Weight (kg)</Label>
+                          </div>
+                          <Input
+                            id="weight"
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            value={weight}
+                            onChange={(e) => handleNumberChange('weight', e.target.value)}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Estimated weight of your order
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                          {weather === 'rainy' ? (
+                            <CloudRain className="h-4 w-4" />
+                          ) : (
+                            <CloudSun className="h-4 w-4" />
+                          )}
+                          <Label>Weather Conditions</Label>
+                        </div>
+                        <RadioGroup
+                          value={weather}
+                          onValueChange={handleWeatherChange}
+                          className="grid md:grid-cols-3 gap-4 pt-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem id="normal-weather" value="normal" />
+                            <Label htmlFor="normal-weather" className="font-medium">Normal</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem id="rainy-weather" value="rainy" />
+                            <Label htmlFor="rainy-weather" className="font-medium">Rainy</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem id="extreme-weather" value="extreme" />
+                            <Label htmlFor="extreme-weather" className="font-medium">Extreme</Label>
+                          </div>
+                        </RadioGroup>
+                        <p className="text-xs text-muted-foreground">
+                          Current weather conditions may affect delivery fees
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </form>
               </CardContent>
@@ -177,7 +282,7 @@ const Checkout = () => {
                         <div className="grid gap-1.5">
                           <Label htmlFor="vendor-delivery" className="font-medium">Vendor Delivery</Label>
                           <p className="text-sm text-muted-foreground">
-                            The shop will handle the delivery directly to you (Free)
+                            The shop will handle the delivery directly to you
                           </p>
                         </div>
                       </div>
@@ -257,10 +362,39 @@ const Checkout = () => {
                     <span>Subtotal</span>
                     <span>₹{subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Delivery Fee</span>
-                    <span>₹{deliveryFee.toFixed(2)}</span>
+                  
+                  {/* Delivery Fee Breakdown */}
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>Base Delivery Fee</span>
+                    <span>₹{deliveryFees.baseFee.toFixed(2)}</span>
                   </div>
+                  
+                  {deliveryFees.distanceFee > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Distance Fee ({distance} km)</span>
+                      <span>₹{deliveryFees.distanceFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {deliveryFees.weightFee > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Weight Fee ({weight} kg)</span>
+                      <span>₹{deliveryFees.weightFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {deliveryFees.weatherFee > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>{weather === 'rainy' ? 'Rainy' : 'Extreme'} Weather Fee</span>
+                      <span>₹{deliveryFees.weatherFee.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span>Total Delivery Fee</span>
+                    <span>₹{deliveryFees.totalFee.toFixed(2)}</span>
+                  </div>
+                  
                   {formData.deliveryOption === 'third-party' && (
                     <div className="flex justify-between">
                       <span>Third-Party Delivery</span>
@@ -269,7 +403,7 @@ const Checkout = () => {
                   )}
                   <div className="border-t pt-4 flex justify-between font-medium">
                     <span>Total</span>
-                    <span>₹{(total + (formData.deliveryOption === 'third-party' ? 50 : 0)).toFixed(2)}</span>
+                    <span>₹{total.toFixed(2)}</span>
                   </div>
                 </div>
                 
