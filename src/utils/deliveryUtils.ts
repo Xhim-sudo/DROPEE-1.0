@@ -1,4 +1,3 @@
-
 interface DeliveryFees {
   baseFee: number;
   distanceFee: number;
@@ -20,8 +19,8 @@ export const calculateDeliveryFee = (
   weight: number,
   weather: string
 ): DeliveryFees => {
-  // Use parameters from defaultFeeParams
-  const params = defaultFeeParams;
+  // Use parameters from current fee parameters
+  const params = getCurrentFeeParams();
   
   // Base fee
   const baseFee = params.baseRate;
@@ -56,7 +55,7 @@ export const calculateDeliveryFee = (
   };
 };
 
-// Admin interface for updating fee parameters (could be expanded in future)
+// Admin interface for updating fee parameters
 export interface DeliveryFeeParams {
   baseRate: number;
   distanceRatePerKm: number;
@@ -67,7 +66,7 @@ export interface DeliveryFeeParams {
   extremeWeatherFee: number;
 }
 
-// Default parameters - In a real app, these would be fetched from a database
+// Default parameters
 export const defaultFeeParams: DeliveryFeeParams = {
   baseRate: 100,
   distanceRatePerKm: 10,
@@ -76,4 +75,60 @@ export const defaultFeeParams: DeliveryFeeParams = {
   freeWeightThreshold: 5,
   rainyWeatherFee: 30,
   extremeWeatherFee: 50
+};
+
+// Store the current parameters - initially set to default
+let currentFeeParams: DeliveryFeeParams = { ...defaultFeeParams };
+
+/**
+ * Get the current fee parameters
+ * @returns Current delivery fee parameters
+ */
+export const getCurrentFeeParams = (): DeliveryFeeParams => {
+  // In a real app, this might fetch from localStorage, context, or API
+  return currentFeeParams;
+};
+
+/**
+ * Update fee parameters (for admin use)
+ * @param newParams - New parameters to update
+ * @returns Updated fee parameters
+ */
+export const updateFeeParams = (newParams: Partial<DeliveryFeeParams>): DeliveryFeeParams => {
+  // Update only the provided parameters
+  currentFeeParams = {
+    ...currentFeeParams,
+    ...newParams
+  };
+  
+  // In a real app, this would save to a database or API
+  // For now, we're just keeping it in memory
+  // localStorage.setItem('deliveryFeeParams', JSON.stringify(currentFeeParams));
+  
+  return currentFeeParams;
+};
+
+/**
+ * Reset fee parameters to default values
+ * @returns Default fee parameters
+ */
+export const resetFeeParams = (): DeliveryFeeParams => {
+  currentFeeParams = { ...defaultFeeParams };
+  // localStorage.removeItem('deliveryFeeParams');
+  return currentFeeParams;
+};
+
+// On app initialization, we could load saved params from storage
+// This function would be called when the app starts
+export const initializeFeeParams = (): void => {
+  // In a real app with persistence:
+  // const savedParams = localStorage.getItem('deliveryFeeParams');
+  // if (savedParams) {
+  //   try {
+  //     currentFeeParams = JSON.parse(savedParams);
+  //   } catch (e) {
+  //     console.error('Failed to parse saved delivery parameters', e);
+  //     currentFeeParams = { ...defaultFeeParams };
+  //   }
+  // }
 };
