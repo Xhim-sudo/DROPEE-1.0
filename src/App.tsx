@@ -17,6 +17,11 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
+// Vendor & Admin Pages
+import VendorSignup from "./pages/vendor/VendorSignup";
+import VendorLogin from "./pages/vendor/VendorLogin";
+import AdminLogin from "./pages/admin/AdminLogin";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +40,14 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/services" element={<Services />} />
+            
+            {/* Vendor Routes */}
+            <Route path="/vendor/signup" element={<VendorSignup />} />
+            <Route path="/vendor/login" element={<VendorLogin />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
