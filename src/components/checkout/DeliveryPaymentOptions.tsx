@@ -2,7 +2,7 @@
 import React from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, MapPin, Truck, Cash, QrCode } from 'lucide-react';
+import { AlertCircle, MapPin, Truck, CreditCard, QrCode } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Card,
@@ -78,7 +78,7 @@ const DeliveryPaymentOptions: React.FC<DeliveryPaymentOptionsProps> = ({
                   <RadioGroupItem id="cash" value="cash" />
                   <div className="grid gap-1.5">
                     <Label htmlFor="cash" className="font-medium flex items-center gap-1">
-                      <Cash className="h-4 w-4" /> Cash on Delivery
+                      <CreditCard className="h-4 w-4" /> Cash on Delivery
                     </Label>
                     <p className="text-sm text-muted-foreground">
                       Pay when your order arrives
