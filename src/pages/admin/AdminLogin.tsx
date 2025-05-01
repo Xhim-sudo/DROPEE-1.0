@@ -1,16 +1,19 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, ShoppingBag } from 'lucide-react';
+import { toast } from "@/components/ui/sonner";
 
 const AdminLogin = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -22,7 +25,25 @@ const AdminLogin = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log('Admin login form submitted', formData);
+    setIsLoading(true);
+    
+    // For demo purposes, we're just simulating a login
+    // In a real app, this would validate with Firebase Auth
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      // For demo, we'll accept any email with admin@example.com and any password
+      if (formData.email.includes('admin@') && formData.password.length > 0) {
+        toast.success("Login successful", {
+          description: "Welcome to the admin dashboard",
+        });
+        navigate('/admin/dashboard');
+      } else {
+        toast.error("Login failed", {
+          description: "Invalid email or password",
+        });
+      }
+    }, 1500);
   };
 
   return (
@@ -97,11 +118,16 @@ const AdminLogin = () => {
                 <Button 
                   type="submit"
                   className="w-full bg-gray-800 hover:bg-gray-700"
+                  disabled={isLoading}
                 >
-                  Sign In
+                  {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </div>
             </form>
+            
+            <div className="mt-4 text-center text-sm text-gray-600">
+              <p>Demo login: admin@example.com / any password</p>
+            </div>
           </div>
         </div>
       </div>

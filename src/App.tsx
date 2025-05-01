@@ -22,6 +22,15 @@ import VendorSignup from "./pages/vendor/VendorSignup";
 import VendorLogin from "./pages/vendor/VendorLogin";
 import AdminLogin from "./pages/admin/AdminLogin";
 
+// Admin Panel
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminVendors from "./pages/admin/AdminVendors";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminSettings from "./pages/admin/AdminSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,6 +56,16 @@ const App = () => (
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
+            
+            {/* Admin Panel Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="vendors" element={<AdminVendors />} />
+              <Route path="customers" element={<AdminCustomers />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
