@@ -11,7 +11,6 @@ import { toast } from '@/components/ui/use-toast';
 import { calculateDeliveryFee } from '@/utils/deliveryUtils';
 import { useCart } from '@/context/CartContext';
 import CustomerInfoForm from './CustomerInfoForm';
-import DeliveryFactors from './DeliveryFactors';
 import DeliveryPaymentOptions from './DeliveryPaymentOptions';
 import OrderSummary from './OrderSummary';
 
@@ -29,10 +28,10 @@ const CheckoutContainer: React.FC = () => {
     paymentMethod: 'cash'
   });
 
-  // States for delivery fee calculation
-  const [distance, setDistance] = useState(3); // in km
-  const [weight, setWeight] = useState(1); // in kg
-  const [weather, setWeather] = useState('normal'); // normal, rainy, extreme
+  // Use default values for delivery factors now managed by admin
+  const distance = 3; // default distance in km
+  const weight = 1; // default weight in kg
+  const weather = 'normal'; // default weather condition
   const [deliveryFees, setDeliveryFees] = useState({
     baseFee: 100,
     distanceFee: 0,
@@ -41,11 +40,11 @@ const CheckoutContainer: React.FC = () => {
     totalFee: 100
   });
 
-  // Calculate delivery fees when factors change
+  // Calculate delivery fees using admin-set parameters
   useEffect(() => {
     const fees = calculateDeliveryFee(distance, weight, weather);
     setDeliveryFees(fees);
-  }, [distance, weight, weather]);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -54,18 +53,6 @@ const CheckoutContainer: React.FC = () => {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleWeatherChange = (value: string) => {
-    setWeather(value);
-  };
-
-  const handleNumberChange = (name: string, value: string) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      if (name === 'distance') setDistance(numValue);
-      if (name === 'weight') setWeight(numValue);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,14 +91,6 @@ const CheckoutContainer: React.FC = () => {
           <CardContent>
             <form id="checkout-form" onSubmit={handleSubmit} className="space-y-6">
               <CustomerInfoForm formData={formData} onChange={handleChange} />
-              <DeliveryFactors 
-                distance={distance}
-                weight={weight}
-                weather={weather}
-                onDistanceChange={(value) => handleNumberChange('distance', value)}
-                onWeightChange={(value) => handleNumberChange('weight', value)}
-                onWeatherChange={handleWeatherChange}
-              />
             </form>
           </CardContent>
         </Card>

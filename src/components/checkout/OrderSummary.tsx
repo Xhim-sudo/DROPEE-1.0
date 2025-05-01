@@ -31,9 +31,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
   items,
   subtotal,
   deliveryFees,
-  distance,
-  weight,
-  weather,
   deliveryOption,
   total
 }) => {
@@ -59,35 +56,9 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             <span>₹{subtotal.toFixed(2)}</span>
           </div>
           
-          {/* Delivery Fee Breakdown */}
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Base Delivery Fee</span>
-            <span>₹{deliveryFees.baseFee.toFixed(2)}</span>
-          </div>
-          
-          {deliveryFees.distanceFee > 0 && (
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Distance Fee ({distance} km)</span>
-              <span>₹{deliveryFees.distanceFee.toFixed(2)}</span>
-            </div>
-          )}
-          
-          {deliveryFees.weightFee > 0 && (
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Weight Fee ({weight} kg)</span>
-              <span>₹{deliveryFees.weightFee.toFixed(2)}</span>
-            </div>
-          )}
-          
-          {deliveryFees.weatherFee > 0 && (
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{weather === 'rainy' ? 'Rainy' : 'Extreme'} Weather Fee</span>
-              <span>₹{deliveryFees.weatherFee.toFixed(2)}</span>
-            </div>
-          )}
-          
+          {/* Simplified Delivery Fee Display */}
           <div className="flex justify-between">
-            <span>Total Delivery Fee</span>
+            <span>Delivery Fee</span>
             <span>₹{deliveryFees.totalFee.toFixed(2)}</span>
           </div>
           
