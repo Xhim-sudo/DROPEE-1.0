@@ -24,9 +24,11 @@ const CheckoutContainer: React.FC = () => {
     email: '',
     address: '',
     instructions: '',
-    deliveryOption: 'vendor',
+    deliveryOption: 'delivery',
     paymentMethod: 'cash'
   });
+
+  const [upiId, setUpiId] = useState('vendor@upi'); // Vendor UPI ID would come from vendor data
 
   // Use default values for delivery factors now managed by admin
   const distance = 3; // default distance in km
@@ -55,10 +57,53 @@ const CheckoutContainer: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleUpiIdChange = (value: string) => {
+    setUpiId(value);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real implementation, this would send the order to a backend
+    // Validate required fields based on delivery option
+    if (!formData.name || !formData.phone) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate address for delivery option
+    if (formData.deliveryOption === 'delivery' && !formData.address) {
+      toast({
+        title: "Missing address",
+        description: "Please provide a delivery address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Prepare order data for WhatsApp message
+    const orderData = {
+      customer: {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.deliveryOption === 'delivery' ? formData.address : 'Pickup at store'
+      },
+      items: items.map(item => `${item.quantity}x ${item.name} (₹${(item.price * item.quantity).toFixed(2)})`),
+      subtotal: getSubtotal().toFixed(2),
+      deliveryFee: formData.deliveryOption === 'delivery' ? deliveryFees.totalFee.toFixed(2) : '0.00',
+      total: (formData.deliveryOption === 'delivery' ? getSubtotal() + deliveryFees.totalFee : getSubtotal()).toFixed(2),
+      deliveryOption: formData.deliveryOption,
+      paymentMethod: formData.paymentMethod,
+      instructions: formData.instructions || 'None'
+    };
+
+    console.log("Order data for WhatsApp:", orderData);
+    
+    // In a real implementation, this would send the order to a backend or directly to WhatsApp
     toast({
       title: "Order placed successfully!",
       description: "You will receive a WhatsApp message with your order details.",
@@ -77,8 +122,8 @@ const CheckoutContainer: React.FC = () => {
 
   // Calculate totals
   const subtotal = getSubtotal();
-  const deliveryFee = deliveryFees.totalFee;
-  const total = subtotal + deliveryFee + (formData.deliveryOption === 'third-party' ? 50 : 0);
+  const deliveryFee = formData.deliveryOption === 'delivery' ? deliveryFees.totalFee : 0;
+  const total = subtotal + deliveryFee;
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -98,7 +143,9 @@ const CheckoutContainer: React.FC = () => {
         <DeliveryPaymentOptions 
           deliveryOption={formData.deliveryOption}
           paymentMethod={formData.paymentMethod}
+          upiId={upiId}
           onOptionChange={handleSelectChange}
+          onUpiIdChange={handleUpiIdChange}
         />
       </div>
       
@@ -108,9 +155,6 @@ const CheckoutContainer: React.FC = () => {
           items={items}
           subtotal={subtotal}
           deliveryFees={deliveryFees}
-          distance={distance}
-          weight={weight}
-          weather={weather}
           deliveryOption={formData.deliveryOption}
           total={total}
         />

@@ -20,9 +20,6 @@ interface OrderSummaryProps {
     weatherFee: number;
     totalFee: number;
   };
-  distance: number;
-  weight: number;
-  weather: string;
   deliveryOption: string;
   total: number;
 }
@@ -56,18 +53,20 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
             <span>₹{subtotal.toFixed(2)}</span>
           </div>
           
-          {/* Simplified Delivery Fee Display */}
-          <div className="flex justify-between">
-            <span>Delivery Fee</span>
-            <span>₹{deliveryFees.totalFee.toFixed(2)}</span>
-          </div>
-          
-          {deliveryOption === 'third-party' && (
+          {deliveryOption === 'delivery' && (
             <div className="flex justify-between">
-              <span>Third-Party Delivery</span>
-              <span>₹50.00</span>
+              <span>Delivery Fee</span>
+              <span>₹{deliveryFees.totalFee.toFixed(2)}</span>
             </div>
           )}
+          
+          {deliveryOption === 'pickup' && (
+            <div className="flex justify-between text-green-600">
+              <span>Pickup (No Fee)</span>
+              <span>₹0.00</span>
+            </div>
+          )}
+          
           <div className="border-t pt-4 flex justify-between font-medium">
             <span>Total</span>
             <span>₹{total.toFixed(2)}</span>
