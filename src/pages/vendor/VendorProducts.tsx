@@ -1,9 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ShoppingBag, Search, Filter, Plus, Image, Percent, Info, Calendar } from 'lucide-react';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const VendorProducts = () => {
   // Sample products data with additional fields

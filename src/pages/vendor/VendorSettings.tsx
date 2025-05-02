@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { QrCode, Cash } from 'lucide-react';
+import { QrCode, Wallet } from 'lucide-react';
 
 const VendorSettings = () => {
   return (
@@ -149,7 +149,7 @@ const VendorSettings = () => {
                   <div className="flex items-center space-x-2 p-4 rounded-md border mb-3">
                     <RadioGroupItem value="cod" id="payment-cod" />
                     <Label htmlFor="payment-cod" className="flex items-center">
-                      <Cash className="h-5 w-5 mr-2 text-gray-600" />
+                      <Wallet className="h-5 w-5 mr-2 text-gray-600" />
                       <div>
                         <p className="font-medium">Cash on Delivery (COD)</p>
                         <p className="text-sm text-muted-foreground">Accept cash payments when the order is delivered</p>
