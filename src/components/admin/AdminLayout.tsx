@@ -10,7 +10,11 @@ import {
   Settings,
   BarChart3,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Package,
+  PackagePlus,
+  Calendar,
+  Update
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -22,6 +26,10 @@ const AdminLayout = () => {
     { icon: Store, label: 'Vendors', path: '/admin/vendors' },
     { icon: ShoppingBag, label: 'Products', path: '/admin/products' },
     { icon: BarChart3, label: 'Orders', path: '/admin/orders' },
+    { icon: Package, label: 'Services', path: '/admin/services' },
+    { icon: PackagePlus, label: 'Categories', path: '/admin/categories' },
+    { icon: Calendar, label: 'Updates', path: '/admin/updates' },
+    { icon: Update, label: 'Delivery Factors', path: '/admin/delivery-factors' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
