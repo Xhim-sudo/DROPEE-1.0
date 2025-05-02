@@ -17,9 +17,19 @@ import OrderSuccess from "./pages/OrderSuccess";
 import Services from "./pages/Services";
 import NotFound from "./pages/NotFound";
 
-// Vendor & Admin Pages
+// Vendor Pages
 import VendorSignup from "./pages/vendor/VendorSignup";
 import VendorLogin from "./pages/vendor/VendorLogin";
+import VendorLayout from "./components/vendor/VendorLayout";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorProducts from "./pages/vendor/VendorProducts";
+import VendorOrders from "./pages/vendor/VendorOrders";
+import VendorDeliveries from "./pages/vendor/VendorDeliveries";
+import VendorCustomers from "./pages/vendor/VendorCustomers";
+import VendorNotifications from "./pages/vendor/VendorNotifications";
+import VendorSettings from "./pages/vendor/VendorSettings";
+
+// Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
 
 // Admin Panel
@@ -54,9 +64,20 @@ const App = () => (
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/services" element={<Services />} />
             
-            {/* Vendor Routes */}
+            {/* Vendor Authentication Routes */}
             <Route path="/vendor/signup" element={<VendorSignup />} />
             <Route path="/vendor/login" element={<VendorLogin />} />
+            
+            {/* Vendor Panel Routes */}
+            <Route path="/vendor" element={<VendorLayout />}>
+              <Route path="dashboard" element={<VendorDashboard />} />
+              <Route path="products" element={<VendorProducts />} />
+              <Route path="orders" element={<VendorOrders />} />
+              <Route path="deliveries" element={<VendorDeliveries />} />
+              <Route path="customers" element={<VendorCustomers />} />
+              <Route path="notifications" element={<VendorNotifications />} />
+              <Route path="settings" element={<VendorSettings />} />
+            </Route>
             
             {/* Admin Routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
