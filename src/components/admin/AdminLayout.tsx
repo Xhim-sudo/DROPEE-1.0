@@ -14,7 +14,7 @@ import {
   Package,
   PackagePlus,
   Calendar,
-  Update
+  RefreshCcw
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -29,7 +29,7 @@ const AdminLayout = () => {
     { icon: Package, label: 'Services', path: '/admin/services' },
     { icon: PackagePlus, label: 'Categories', path: '/admin/categories' },
     { icon: Calendar, label: 'Updates', path: '/admin/updates' },
-    { icon: Update, label: 'Delivery Factors', path: '/admin/delivery-factors' },
+    { icon: RefreshCcw, label: 'Delivery Factors', path: '/admin/delivery-factors' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
 
