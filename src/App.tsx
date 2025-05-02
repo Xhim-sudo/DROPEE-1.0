@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 // Vendor Pages
 import VendorSignup from "./pages/vendor/VendorSignup";
 import VendorLogin from "./pages/vendor/VendorLogin";
+import VendorForgotPassword from "./pages/vendor/VendorForgotPassword";
 import VendorLayout from "./components/vendor/VendorLayout";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProducts from "./pages/vendor/VendorProducts";
@@ -67,6 +68,7 @@ const App = () => (
             {/* Vendor Authentication Routes */}
             <Route path="/vendor/signup" element={<VendorSignup />} />
             <Route path="/vendor/login" element={<VendorLogin />} />
+            <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
             
             {/* Vendor Panel Routes */}
             <Route path="/vendor" element={<VendorLayout />}>

@@ -2,6 +2,26 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, ShoppingBag, Users, TrendingUp } from 'lucide-react';
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
+import { 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Legend,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 const VendorDashboard = () => {
   // Sample data - in a real app this would come from an API
@@ -20,6 +40,35 @@ const VendorDashboard = () => {
     { id: "ORD-1237", customer: "Emily Davis", date: "2025-04-30", status: "Pending", total: "$75.25" },
     { id: "ORD-1238", customer: "Michael Brown", date: "2025-04-29", status: "Delivered", total: "$198.75" },
   ];
+
+  // Sample sales data for the area chart
+  const salesData = [
+    { name: 'Jan', sales: 4000 },
+    { name: 'Feb', sales: 3000 },
+    { name: 'Mar', sales: 5000 },
+    { name: 'Apr', sales: 2780 },
+    { name: 'May', sales: 1890 },
+    { name: 'Jun', sales: 2390 },
+    { name: 'Jul', sales: 3490 },
+  ];
+
+  // Sample data for the product popularity pie chart
+  const productData = [
+    { name: 'Fresh Vegetables', value: 400, color: '#0088FE' },
+    { name: 'Organic Fruits', value: 300, color: '#00C49F' },
+    { name: 'Dairy Products', value: 300, color: '#FFBB28' },
+    { name: 'Bakery', value: 200, color: '#FF8042' },
+  ];
+
+  const chartConfig = {
+    sales: {
+      label: "Sales",
+      theme: {
+        light: "#0088FE",
+        dark: "#0088FE",
+      },
+    }
+  };
 
   return (
     <div>
@@ -83,22 +132,60 @@ const VendorDashboard = () => {
         </div>
       </div>
 
-      {/* Performance Metrics */}
+      {/* Performance Metrics with actual charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Sales Overview</CardTitle>
           </CardHeader>
-          <CardContent className="h-80 flex items-center justify-center bg-muted/20">
-            <p className="text-muted-foreground">Sales chart will be displayed here</p>
+          <CardContent className="h-80">
+            <ChartContainer config={chartConfig}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={salesData}
+                  margin={{
+                    top: 10,
+                    right: 30,
+                    left: 0,
+                    bottom: 0,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="sales" name="sales" stroke="#0088FE" fill="#0088FE" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
+        
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Popular Products</CardTitle>
           </CardHeader>
-          <CardContent className="h-80 flex items-center justify-center bg-muted/20">
-            <p className="text-muted-foreground">Products chart will be displayed here</p>
+          <CardContent className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={productData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {productData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value, name) => [`${value}`, name]} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>

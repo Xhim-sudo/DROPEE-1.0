@@ -1,28 +1,68 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag, Store } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+
+// Define login form schema
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  rememberMe: z.boolean().default(false)
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const VendorLogin = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // Initialize form
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false
+    }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    console.log('Vendor login form submitted', formData);
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      console.log('Vendor login form submitted', data);
+      
+      // Here you would normally authenticate with your backend
+      // For now, we'll simulate a successful login with a simple check
+      if (data.email && data.password) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to your vendor dashboard!",
+        });
+        
+        // Redirect to dashboard after successful login
+        navigate('/vendor/dashboard');
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid email or password. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login failed",
+        description: "There was an issue with your login. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -50,58 +90,78 @@ const VendorLogin = () => {
           </div>
           
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
                   name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="email"
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link to="/vendor/forgot-password" className="text-sm text-theme-purple hover:text-theme-purple/80">
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
+                
+                <FormField
+                  control={form.control}
                   name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="mt-1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Password</FormLabel>
+                        <Link to="/vendor/forgot-password" className="text-sm text-theme-purple hover:text-theme-purple/80">
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="password"
+                          autoComplete="current-password"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-theme-purple focus:ring-theme-purple border-gray-300 rounded"
+                
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          className="h-4 w-4 text-theme-purple focus:ring-theme-purple border-gray-300 rounded"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Remember me</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-              
-              <div>
+                
                 <Button 
                   type="submit"
                   className="w-full bg-theme-purple hover:bg-theme-purple/80"
                 >
                   Sign In
                 </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
             
             <p className="mt-4 text-center text-sm text-gray-600">
               Don't have a vendor account?{" "}
