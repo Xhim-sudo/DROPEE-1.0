@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { QrCode, Cash } from 'lucide-react';
 
 const VendorSettings = () => {
   return (
@@ -132,7 +133,7 @@ const VendorSettings = () => {
           </Card>
         </TabsContent>
         
-        {/* Payments Tab */}
+        {/* Payments Tab - Updated for COD and UPI only */}
         <TabsContent value="payments">
           <Card>
             <CardHeader>
@@ -144,40 +145,52 @@ const VendorSettings = () => {
             <CardContent className="space-y-6">
               <div>
                 <h3 className="font-medium mb-4">Payment Methods</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="payment-credit" className="h-4 w-4" defaultChecked />
-                    <Label htmlFor="payment-credit">Credit & Debit Cards</Label>
+                <RadioGroup defaultValue="cod">
+                  <div className="flex items-center space-x-2 p-4 rounded-md border mb-3">
+                    <RadioGroupItem value="cod" id="payment-cod" />
+                    <Label htmlFor="payment-cod" className="flex items-center">
+                      <Cash className="h-5 w-5 mr-2 text-gray-600" />
+                      <div>
+                        <p className="font-medium">Cash on Delivery (COD)</p>
+                        <p className="text-sm text-muted-foreground">Accept cash payments when the order is delivered</p>
+                      </div>
+                    </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="payment-paypal" className="h-4 w-4" defaultChecked />
-                    <Label htmlFor="payment-paypal">PayPal</Label>
+                  
+                  <div className="flex items-center space-x-2 p-4 rounded-md border">
+                    <RadioGroupItem value="upi" id="payment-upi" />
+                    <Label htmlFor="payment-upi" className="flex items-center">
+                      <QrCode className="h-5 w-5 mr-2 text-gray-600" />
+                      <div>
+                        <p className="font-medium">UPI Payment</p>
+                        <p className="text-sm text-muted-foreground">Accept payments via UPI ID or QR code</p>
+                      </div>
+                    </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="payment-bank" className="h-4 w-4" />
-                    <Label htmlFor="payment-bank">Bank Transfer</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="payment-cash" className="h-4 w-4" defaultChecked />
-                    <Label htmlFor="payment-cash">Cash on Delivery</Label>
-                  </div>
-                </div>
+                </RadioGroup>
               </div>
               
               <div>
-                <h3 className="font-medium mb-4">Payout Information</h3>
+                <h3 className="font-medium mb-4">UPI Payment Details</h3>
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="bank-name">Bank Name</Label>
-                    <Input id="bank-name" defaultValue="First National Bank" />
+                    <Label htmlFor="upi-id">UPI ID</Label>
+                    <Input id="upi-id" placeholder="yourname@bankname" />
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="account-number">Account Number</Label>
-                    <Input id="account-number" defaultValue="********1234" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="routing-number">Routing Number</Label>
-                    <Input id="routing-number" defaultValue="*******789" />
+                    <Label htmlFor="upi-qr">UPI QR Code</Label>
+                    <div className="border border-dashed rounded-md p-4 text-center">
+                      <div className="w-64 h-64 mx-auto bg-gray-100 rounded-md flex items-center justify-center">
+                        <span className="text-muted-foreground">QR Code Preview</span>
+                      </div>
+                      <Button variant="outline" size="sm" className="mt-4">
+                        Upload QR Code
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Upload a QR code image that customers can scan to pay via UPI
+                    </p>
                   </div>
                 </div>
               </div>
@@ -188,62 +201,89 @@ const VendorSettings = () => {
           </Card>
         </TabsContent>
         
-        {/* Shipping Tab */}
+        {/* Shipping Tab - Updated for admin delivery and store pickup options */}
         <TabsContent value="shipping">
           <Card>
             <CardHeader>
               <CardTitle>Shipping Settings</CardTitle>
               <CardDescription>
-                Configure how your products are shipped to customers
+                Configure delivery options for your products
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h3 className="font-medium mb-4">Shipping Zones</h3>
-                <div className="border rounded-md">
-                  <div className="p-4 border-b bg-muted/20 flex justify-between items-center">
-                    <h4 className="font-medium">Local Delivery (5 miles)</h4>
-                    <div>
-                      <Button variant="outline" size="sm" className="mr-2">Edit</Button>
-                      <Button variant="outline" size="sm" className="text-red-600">Delete</Button>
+                <h3 className="font-medium mb-4">Delivery through Admin</h3>
+                <div className="space-y-4">
+                  <div className="border rounded-md p-4 bg-muted/10">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium">Delivery Fee Contribution</h4>
                     </div>
-                  </div>
-                  <div className="p-4 border-b">
-                    <p className="text-sm mb-2"><span className="font-medium">Fee:</span> $2.99</p>
-                    <p className="text-sm"><span className="font-medium">Delivery Time:</span> 30-60 minutes</p>
-                  </div>
-                  
-                  <div className="p-4 border-b bg-muted/20 flex justify-between items-center">
-                    <h4 className="font-medium">City Delivery (5-15 miles)</h4>
-                    <div>
-                      <Button variant="outline" size="sm" className="mr-2">Edit</Button>
-                      <Button variant="outline" size="sm" className="text-red-600">Delete</Button>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Set how much you're willing to contribute towards the delivery fee. 
+                      Admin will handle the delivery and may provide discounted or free delivery to customers.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="delivery-fee">Your Contribution (₹)</Label>
+                        <Input id="delivery-fee" type="number" min="0" placeholder="50" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="min-order">Minimum Order Value (₹)</Label>
+                        <Input id="min-order" type="number" min="0" placeholder="500" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-sm mb-2"><span className="font-medium">Fee:</span> $5.99</p>
-                    <p className="text-sm"><span className="font-medium">Delivery Time:</span> 1-2 hours</p>
                   </div>
                 </div>
-                <Button variant="outline" className="mt-4">
-                  Add Shipping Zone
-                </Button>
               </div>
               
               <div>
-                <h3 className="font-medium mb-4">Shipping Options</h3>
+                <h3 className="font-medium mb-4">Store Options</h3>
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="free-shipping" className="h-4 w-4" defaultChecked />
-                    <Label htmlFor="free-shipping">Offer free shipping on orders over $50</Label>
+                    <input type="checkbox" id="store-pickup" className="h-4 w-4" defaultChecked />
+                    <Label htmlFor="store-pickup">Allow store pickup</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="packaging-fee" className="h-4 w-4" />
-                    <Label htmlFor="packaging-fee">Add packaging fee ($1.00)</Label>
+                  <div className="ml-6 space-y-2">
+                    <Label htmlFor="pickup-instructions">Pickup Instructions</Label>
+                    <Textarea 
+                      id="pickup-instructions" 
+                      placeholder="Enter instructions for customers who choose store pickup..."
+                      rows={3}
+                    />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="pickup-option" className="h-4 w-4" defaultChecked />
-                    <Label htmlFor="pickup-option">Allow store pickup</Label>
+                  
+                  <div className="flex items-center space-x-2 mt-4">
+                    <input type="checkbox" id="appointment-option" className="h-4 w-4" />
+                    <Label htmlFor="appointment-option">Allow appointment booking</Label>
+                  </div>
+                  <div className="ml-6 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="appointment-duration">Appointment Duration (minutes)</Label>
+                      <Input id="appointment-duration" type="number" min="15" step="15" defaultValue="30" />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Available Days</Label>
+                      <div className="grid grid-cols-7 gap-2">
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                          <div key={day} className="flex flex-col items-center">
+                            <input type="checkbox" id={`day-${day}`} className="h-4 w-4" defaultChecked={day !== 'Sun'} />
+                            <Label htmlFor={`day-${day}`} className="text-xs mt-1">{day}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="time-from">From</Label>
+                        <Input id="time-from" type="time" defaultValue="10:00" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="time-to">To</Label>
+                        <Input id="time-to" type="time" defaultValue="18:00" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
