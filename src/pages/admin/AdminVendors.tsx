@@ -17,14 +17,47 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/components/ui/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { 
   Search, 
   MoreVertical, 
   Check, 
   X, 
   ChevronLeft, 
-  ChevronRight 
+  ChevronRight,
+  UserPlus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+
+// Schema for vendor form validation
+const vendorFormSchema = z.object({
+  name: z.string().min(3, { message: "Vendor name must be at least 3 characters." }),
+  owner: z.string().min(3, { message: "Owner name must be at least 3 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(10, { message: "Phone number must be at least 10 digits." }),
+  status: z.enum(["active", "inactive", "pending"]),
+});
+
+type VendorFormValues = z.infer<typeof vendorFormSchema>;
 
 // Mock data for vendors
 const mockVendors = [
@@ -81,8 +114,24 @@ const mockVendors = [
 ];
 
 const AdminVendors = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [vendors, setVendors] = useState(mockVendors);
+  const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
+  const [isEditVendorOpen, setIsEditVendorOpen] = useState(false);
+  const [currentVendorId, setCurrentVendorId] = useState<number | null>(null);
+
+  // Initialize form for adding/editing vendors
+  const form = useForm<VendorFormValues>({
+    resolver: zodResolver(vendorFormSchema),
+    defaultValues: {
+      name: '',
+      owner: '',
+      email: '',
+      phone: '',
+      status: 'pending',
+    },
+  });
 
   // Filter vendors based on search term
   const filteredVendors = vendors.filter(
@@ -96,6 +145,75 @@ const AdminVendors = () => {
     setVendors(vendors.map(vendor => 
       vendor.id === id ? {...vendor, status: newStatus} : vendor
     ));
+    
+    toast({
+      title: "Status updated",
+      description: `Vendor status has been changed to ${newStatus}.`,
+    });
+  };
+
+  const handleAddVendorOpen = () => {
+    form.reset();
+    setIsAddVendorOpen(true);
+  };
+
+  const handleEditVendor = (vendor: any) => {
+    setCurrentVendorId(vendor.id);
+    form.reset({
+      name: vendor.name,
+      owner: vendor.owner,
+      email: vendor.email,
+      phone: vendor.phone,
+      status: vendor.status,
+    });
+    setIsEditVendorOpen(true);
+  };
+
+  const onSubmitAdd = (data: VendorFormValues) => {
+    // Create a new vendor with the form data
+    const newVendor = {
+      id: Date.now(), // Generate a unique ID
+      name: data.name,
+      owner: data.owner,
+      email: data.email,
+      phone: data.phone,
+      products: 0,
+      status: data.status,
+      dateJoined: new Date().toISOString().split('T')[0],
+    };
+
+    setVendors([...vendors, newVendor]);
+    setIsAddVendorOpen(false);
+    form.reset();
+    
+    toast({
+      title: "Vendor added",
+      description: "New vendor has been successfully added.",
+    });
+  };
+
+  const onSubmitEdit = (data: VendorFormValues) => {
+    if (currentVendorId) {
+      setVendors(vendors.map(vendor => 
+        vendor.id === currentVendorId ? {
+          ...vendor,
+          name: data.name,
+          owner: data.owner,
+          email: data.email,
+          phone: data.phone,
+          status: data.status,
+        } : vendor
+      ));
+      
+      setIsEditVendorOpen(false);
+      setCurrentVendorId(null);
+      form.reset();
+      
+      toast({
+        title: "Vendor updated",
+        description: "Vendor information has been successfully updated.",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -120,7 +238,9 @@ const AdminVendors = () => {
             Manage vendor accounts and applications
           </p>
         </div>
-        <Button>Add New Vendor</Button>
+        <Button onClick={handleAddVendorOpen}>
+          <UserPlus className="mr-2 h-4 w-4" /> Add New Vendor
+        </Button>
       </div>
 
       <div className="flex items-center py-4 bg-white px-4 rounded-lg shadow-sm">
@@ -169,8 +289,9 @@ const AdminVendors = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditVendor(vendor)}>
+                        Edit
+                      </DropdownMenuItem>
                       {vendor.status !== 'active' && (
                         <DropdownMenuItem onClick={() => handleStatusChange(vendor.id, 'active')}>
                           <Check className="h-4 w-4 mr-2" /> Activate
@@ -198,6 +319,198 @@ const AdminVendors = () => {
           </Button>
         </div>
       </div>
+
+      {/* Add Vendor Dialog */}
+      <Dialog open={isAddVendorOpen} onOpenChange={setIsAddVendorOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Add New Vendor</DialogTitle>
+            <DialogDescription>
+              Create a new vendor account. They'll receive an email to set up their password.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitAdd)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vendor Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Store name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="owner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Owner Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="email@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder="(555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <select 
+                        className="w-full p-2 border rounded-md" 
+                        {...field}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setIsAddVendorOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Vendor</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Vendor Dialog */}
+      <Dialog open={isEditVendorOpen} onOpenChange={setIsEditVendorOpen}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Edit Vendor</DialogTitle>
+            <DialogDescription>
+              Update the vendor's information.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitEdit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vendor Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="owner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Owner Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <FormControl>
+                      <select 
+                        className="w-full p-2 border rounded-md" 
+                        {...field}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="pending">Pending</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setIsEditVendorOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
