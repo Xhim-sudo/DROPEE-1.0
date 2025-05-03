@@ -24,7 +24,7 @@ const Navbar = () => {
         {/* Logo section */}
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2">
-            <span className="font-bold text-xl text-theme-purple">QuickOrder</span>
+            <span className="font-bold text-xl text-theme-purple">DROPEE</span>
           </Link>
         </div>
 
