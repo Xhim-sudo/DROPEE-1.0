@@ -1,76 +1,30 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UserPlus } from "lucide-react";
+import { getFirestore, collection, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { app } from '@/config/firebase';
 
 import VendorTable from '@/components/admin/vendors/VendorTable';
 import SearchVendors from '@/components/admin/vendors/SearchVendors';
 import VendorDialog, { vendorFormSchema, VendorFormValues } from '@/components/admin/vendors/VendorDialog';
 import { Vendor } from '@/components/admin/vendors/VendorTypes';
 
-// Mock data for vendors with properly typed status values
-const mockVendors: Vendor[] = [
-  { 
-    id: 1, 
-    name: 'Organic Farms', 
-    owner: 'Robert Johnson', 
-    email: 'robert@organicfarms.com',
-    phone: '(555) 123-4567',
-    products: 45,
-    status: 'active',
-    dateJoined: '2023-05-12'
-  },
-  { 
-    id: 2, 
-    name: 'Tech Haven', 
-    owner: 'Maria Garcia', 
-    email: 'maria@techhaven.com',
-    phone: '(555) 234-5678',
-    products: 78,
-    status: 'active',
-    dateJoined: '2023-06-24'
-  },
-  { 
-    id: 3, 
-    name: 'Fashion Forward', 
-    owner: 'James Wilson', 
-    email: 'james@fashionforward.com',
-    phone: '(555) 345-6789',
-    products: 112,
-    status: 'active',
-    dateJoined: '2023-04-18'
-  },
-  { 
-    id: 4, 
-    name: 'Home Essentials', 
-    owner: 'Sarah Brown', 
-    email: 'sarah@homeessentials.com',
-    phone: '(555) 456-7890',
-    products: 63,
-    status: 'inactive',
-    dateJoined: '2023-07-30'
-  },
-  { 
-    id: 5, 
-    name: 'Craft Corner', 
-    owner: 'Daniel Lee', 
-    email: 'daniel@craftcorner.com',
-    phone: '(555) 567-8901',
-    products: 29,
-    status: 'pending',
-    dateJoined: '2023-09-05'
-  }
-];
+const db = getFirestore(app);
 
 const AdminVendors = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [vendors, setVendors] = useState<Vendor[]>(mockVendors);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
   const [isEditVendorOpen, setIsEditVendorOpen] = useState(false);
   const [currentVendorId, setCurrentVendorId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Initialize form for adding/editing vendors
   const form = useForm<VendorFormValues>({
@@ -84,6 +38,47 @@ const AdminVendors = () => {
     },
   });
 
+  // Get vendors from Firebase
+  useEffect(() => {
+    setIsLoading(true);
+    
+    const vendorsQuery = query(
+      collection(db, "vendorApplications"),
+      orderBy("dateApplied", "desc")
+    );
+    
+    const unsubscribe = onSnapshot(vendorsQuery, (snapshot) => {
+      const vendorsList: Vendor[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        const dateJoined = data.dateApplied ? new Date(data.dateApplied.toDate()).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        
+        return {
+          id: doc.id as unknown as number,
+          name: data.name || '',
+          owner: data.owner || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          products: data.products || 0,
+          status: data.status as "active" | "inactive" | "pending",
+          dateJoined,
+        };
+      });
+      
+      setVendors(vendorsList);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching vendors:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load vendors. Please try again later.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [toast]);
+
   // Filter vendors based on search term
   const filteredVendors = vendors.filter(
     vendor => 
@@ -91,16 +86,43 @@ const AdminVendors = () => {
       vendor.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vendor.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
+  const paginatedVendors = filteredVendors.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
-  const handleStatusChange = (id: number, newStatus: "active" | "inactive" | "pending") => {
-    setVendors(vendors.map(vendor => 
-      vendor.id === id ? {...vendor, status: newStatus} : vendor
-    ));
-    
-    toast({
-      title: "Status updated",
-      description: `Vendor status has been changed to ${newStatus}.`,
-    });
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleStatusChange = async (id: number | string, newStatus: "active" | "inactive" | "pending") => {
+    try {
+      await updateDoc(doc(db, "vendorApplications", id.toString()), {
+        status: newStatus
+      });
+      
+      const statusMessages = {
+        active: "Vendor has been approved and activated.",
+        inactive: "Vendor has been deactivated.",
+        pending: "Vendor status has been set to pending."
+      };
+      
+      toast({
+        title: "Status updated",
+        description: statusMessages[newStatus],
+      });
+      
+    } catch (error) {
+      console.error("Error updating vendor status:", error);
+      toast({
+        title: "Update failed",
+        description: "There was an error updating the vendor status.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddVendorOpen = () => {
@@ -120,50 +142,62 @@ const AdminVendors = () => {
     setIsEditVendorOpen(true);
   };
 
-  const onSubmitAdd = (data: VendorFormValues) => {
-    // Create a new vendor with the form data
-    const newVendor: Vendor = {
-      id: Date.now(), // Generate a unique ID
-      name: data.name,
-      owner: data.owner,
-      email: data.email,
-      phone: data.phone,
-      products: 0,
-      status: data.status,
-      dateJoined: new Date().toISOString().split('T')[0],
-    };
-
-    setVendors([...vendors, newVendor]);
-    setIsAddVendorOpen(false);
-    form.reset();
-    
-    toast({
-      title: "Vendor added",
-      description: "New vendor has been successfully added.",
-    });
+  const onSubmitAdd = async (data: VendorFormValues) => {
+    try {
+      await addDoc(collection(db, "vendorApplications"), {
+        name: data.name,
+        owner: data.owner,
+        email: data.email,
+        phone: data.phone,
+        products: 0,
+        status: data.status,
+        dateApplied: serverTimestamp(),
+      });
+      
+      setIsAddVendorOpen(false);
+      form.reset();
+      
+      toast({
+        title: "Vendor added",
+        description: "New vendor has been successfully added.",
+      });
+    } catch (error) {
+      console.error("Error adding vendor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add vendor. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const onSubmitEdit = (data: VendorFormValues) => {
+  const onSubmitEdit = async (data: VendorFormValues) => {
     if (currentVendorId) {
-      setVendors(vendors.map(vendor => 
-        vendor.id === currentVendorId ? {
-          ...vendor,
+      try {
+        await updateDoc(doc(db, "vendorApplications", currentVendorId.toString()), {
           name: data.name,
           owner: data.owner,
           email: data.email,
           phone: data.phone,
           status: data.status,
-        } : vendor
-      ));
-      
-      setIsEditVendorOpen(false);
-      setCurrentVendorId(null);
-      form.reset();
-      
-      toast({
-        title: "Vendor updated",
-        description: "Vendor information has been successfully updated.",
-      });
+        });
+        
+        setIsEditVendorOpen(false);
+        setCurrentVendorId(null);
+        form.reset();
+        
+        toast({
+          title: "Vendor updated",
+          description: "Vendor information has been successfully updated.",
+        });
+      } catch (error) {
+        console.error("Error updating vendor:", error);
+        toast({
+          title: "Update failed",
+          description: "There was an error updating the vendor information.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -183,11 +217,20 @@ const AdminVendors = () => {
 
       <SearchVendors searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-      <VendorTable 
-        filteredVendors={filteredVendors} 
-        handleEditVendor={handleEditVendor} 
-        handleStatusChange={handleStatusChange} 
-      />
+      {isLoading ? (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-theme-purple"></div>
+        </div>
+      ) : (
+        <VendorTable 
+          filteredVendors={paginatedVendors} 
+          handleEditVendor={handleEditVendor} 
+          handleStatusChange={handleStatusChange}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      )}
 
       {/* Add Vendor Dialog */}
       <VendorDialog 

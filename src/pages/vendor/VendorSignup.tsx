@@ -1,13 +1,20 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ShoppingBag, Store, Upload } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { app } from '@/config/firebase';
+
+const db = getFirestore(app);
 
 const VendorSignup = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,6 +26,7 @@ const VendorSignup = () => {
     password: '',
     confirmPassword: ''
   });
+  const [fileSelected, setFileSelected] = useState<File | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -30,10 +38,60 @@ const VendorSignup = () => {
     }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setFileSelected(event.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Form submission would be handled by Firebase authentication
-    console.log('Vendor signup form submitted', formData);
+    
+    // Basic validation
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure both passwords match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Create vendor application in Firestore
+      await addDoc(collection(db, "vendorApplications"), {
+        owner: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        name: formData.storeName,
+        address: formData.storeAddress,
+        description: formData.storeDescription,
+        businessType: formData.businessType,
+        status: "pending",
+        dateApplied: serverTimestamp(),
+        products: 0
+      });
+
+      toast({
+        title: "Application submitted successfully!",
+        description: "We'll review your application and get back to you soon.",
+      });
+
+      // Redirect to a confirmation page or login
+      navigate('/vendor/login');
+      
+    } catch (error) {
+      console.error("Error submitting vendor application:", error);
+      toast({
+        title: "Submission failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -208,13 +266,22 @@ const VendorSignup = () => {
                             className="relative cursor-pointer rounded-md font-medium text-theme-purple hover:text-theme-purple/80"
                           >
                             <span>Upload a file</span>
-                            <input id="file-upload" name="file-upload" type="file" className="sr-only" />
+                            <input 
+                              id="file-upload" 
+                              name="file-upload" 
+                              type="file" 
+                              className="sr-only" 
+                              onChange={handleFileChange}
+                            />
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
                         <p className="text-xs text-gray-500">
                           PNG, JPG, GIF up to 10MB
                         </p>
+                        {fileSelected && (
+                          <p className="text-sm text-theme-purple">{fileSelected.name}</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -247,8 +314,9 @@ const VendorSignup = () => {
                 <Button 
                   type="submit"
                   className="w-full bg-theme-purple hover:bg-theme-purple/80"
+                  disabled={isSubmitting}
                 >
-                  Submit Application
+                  {isSubmitting ? 'Submitting...' : 'Submit Application'}
                 </Button>
               </div>
             </form>

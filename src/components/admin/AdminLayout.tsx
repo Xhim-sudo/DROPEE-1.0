@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +14,28 @@ import {
   Package,
   PackagePlus,
   Calendar,
-  RefreshCcw
+  RefreshCcw,
+  Bell
 } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { app } from '@/config/firebase';
+import { Badge } from "@/components/ui/badge";
+
+const db = getFirestore(app);
 
 const AdminLayout = () => {
   const location = useLocation();
+  const [pendingVendors, setPendingVendors] = useState(0);
   
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Users, label: 'Customers', path: '/admin/customers' },
-    { icon: Store, label: 'Vendors', path: '/admin/vendors' },
+    { 
+      icon: Store, 
+      label: 'Vendors', 
+      path: '/admin/vendors',
+      badge: pendingVendors > 0 ? pendingVendors : undefined 
+    },
     { icon: ShoppingBag, label: 'Products', path: '/admin/products' },
     { icon: BarChart3, label: 'Orders', path: '/admin/orders' },
     { icon: Package, label: 'Services', path: '/admin/services' },
@@ -32,6 +44,19 @@ const AdminLayout = () => {
     { icon: RefreshCcw, label: 'Delivery Factors', path: '/admin/delivery-factors' },
     { icon: Settings, label: 'Settings', path: '/admin/settings' },
   ];
+
+  useEffect(() => {
+    const pendingVendorsQuery = query(
+      collection(db, "vendorApplications"), 
+      where("status", "==", "pending")
+    );
+
+    const unsubscribe = onSnapshot(pendingVendorsQuery, (snapshot) => {
+      setPendingVendors(snapshot.docs.length);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -61,7 +86,12 @@ const AdminLayout = () => {
                     className={`w-full justify-start ${isActive(item.path) ? 'bg-gray-700' : ''}`}
                   >
                     <item.icon className="h-5 w-5 mr-3" />
-                    {item.label}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge && (
+                      <Badge variant="destructive" className="ml-auto mr-2">
+                        {item.badge}
+                      </Badge>
+                    )}
                     {isActive(item.path) && <ChevronRight className="ml-auto h-4 w-4" />}
                   </Button>
                 </Link>

@@ -1,6 +1,6 @@
 
 export interface Vendor {
-  id: number;
+  id: number | string;
   name: string;
   owner: string;
   email: string;
