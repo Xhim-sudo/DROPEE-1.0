@@ -2,25 +2,22 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ShoppingBag, Image, Percent, Info, Calendar } from 'lucide-react';
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  discountedPrice: number | null;
-  stock: number;
-  status: string;
-  hasOffer: boolean;
-  offerEnds: string | null;
-}
+import { ShoppingBag, Image, Percent, Info, Calendar, Edit, Trash } from 'lucide-react';
+import { Product } from './ProductTypes';
 
 interface ProductsTableProps {
   products: Product[];
+  onEditProduct: (product: Product) => void;
+  onDeleteProduct: (id: string) => void;
+  onManageOffer: (product: Product) => void;
 }
 
-const ProductsTable = ({ products }: ProductsTableProps) => {
+const ProductsTable = ({ 
+  products, 
+  onEditProduct, 
+  onDeleteProduct, 
+  onManageOffer 
+}: ProductsTableProps) => {
   return (
     <div className="mt-6 rounded-md border">
       <div className="overflow-x-auto">
@@ -76,20 +73,32 @@ const ProductsTable = ({ products }: ProductsTableProps) => {
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-center space-x-2">
-                    <Button variant="outline" size="sm" className="flex items-center">
-                      <Image className="h-4 w-4 mr-1" />
-                      <span>Images</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                      onClick={() => onEditProduct(product)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      <span>Edit</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                      onClick={() => onManageOffer(product)}
+                    >
                       <Percent className="h-4 w-4 mr-1" />
                       <span>Offer</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex items-center">
-                      <Info className="h-4 w-4 mr-1" />
-                      <span>Details</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600">
-                      Delete
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600"
+                      onClick={() => onDeleteProduct(product.id)}
+                    >
+                      <Trash className="h-4 w-4 mr-1" />
+                      <span>Delete</span>
                     </Button>
                   </div>
                 </TableCell>

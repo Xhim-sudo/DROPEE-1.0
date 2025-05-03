@@ -5,10 +5,15 @@ import ProductFilters from '@/components/vendor/products/ProductFilters';
 import ProductsTable from '@/components/vendor/products/ProductsTable';
 import ProductPagination from '@/components/vendor/products/ProductPagination';
 import AddProductModal from '@/components/vendor/products/AddProductModal';
+import EditProductModal from '@/components/vendor/products/EditProductModal';
+import { Product } from '@/components/vendor/products/ProductTypes';
+import { ProductFormValues } from '@/components/vendor/products/EditProductModal';
+import { useToast } from "@/components/ui/use-toast";
 
 const VendorProducts = () => {
+  const { toast } = useToast();
   // Sample products data with additional fields
-  const products = [
+  const [products, setProducts] = useState<Product[]>([
     { 
       id: "P001", 
       name: "Organic Apples", 
@@ -75,18 +80,73 @@ const VendorProducts = () => {
       hasOffer: true,
       offerEnds: "2023-07-15"
     },
-  ];
+  ]);
 
-  // State for product modal and pagination
+  // State for product modals and pagination
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const totalProducts = 24; // This would come from your API in a real app
+
+  // Handle edit product
+  const handleEditProduct = (product: Product) => {
+    setCurrentProduct(product);
+    setShowEditModal(true);
+  };
+
+  // Save edited product
+  const handleSaveProduct = (formData: ProductFormValues) => {
+    if (currentProduct) {
+      // Update the product in the array
+      setProducts(products.map(p => 
+        p.id === currentProduct.id 
+          ? { 
+              ...p, 
+              ...formData,
+              // Update status based on stock
+              status: formData.stock === 0 
+                ? "Out of Stock" 
+                : formData.stock < 10 
+                  ? "Low Stock" 
+                  : "Active"
+            } 
+          : p
+      ));
+      
+      toast({
+        title: "Product updated",
+        description: `${formData.name} has been updated successfully.`,
+      });
+    }
+  };
+
+  // Handle delete product
+  const handleDeleteProduct = (id: string) => {
+    setProducts(products.filter(product => product.id !== id));
+    
+    toast({
+      title: "Product deleted",
+      description: "Product has been removed successfully.",
+    });
+  };
+  
+  // Handle offer management
+  const handleManageOffer = (product: Product) => {
+    setCurrentProduct(product);
+    setShowEditModal(true);
+  };
 
   return (
     <div>
       <ProductsHeader onAddProduct={() => setShowProductModal(true)} />
       <ProductFilters />
-      <ProductsTable products={products} />
+      <ProductsTable 
+        products={products} 
+        onEditProduct={handleEditProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onManageOffer={handleManageOffer}
+      />
       <ProductPagination 
         totalProducts={totalProducts} 
         currentPage={currentPage} 
@@ -97,6 +157,14 @@ const VendorProducts = () => {
       <AddProductModal 
         isOpen={showProductModal} 
         onClose={() => setShowProductModal(false)} 
+      />
+      
+      {/* Edit Product Modal */}
+      <EditProductModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        product={currentProduct}
+        onSave={handleSaveProduct}
       />
     </div>
   );

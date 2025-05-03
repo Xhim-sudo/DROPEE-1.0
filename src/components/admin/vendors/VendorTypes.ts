@@ -6,6 +6,6 @@ export interface Vendor {
   email: string;
   phone: string;
   products: number;
-  status: string;
+  status: "active" | "inactive" | "pending"; // Ensure this is strictly typed
   dateJoined: string;
 }
