@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,7 +20,7 @@ const AdminVendors = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isAddVendorOpen, setIsAddVendorOpen] = useState(false);
   const [isEditVendorOpen, setIsEditVendorOpen] = useState(false);
-  const [currentVendorId, setCurrentVendorId] = useState<number | null>(null);
+  const [currentVendorId, setCurrentVendorId] = useState<string | number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -98,7 +97,7 @@ const AdminVendors = () => {
     setCurrentPage(page);
   };
 
-  const handleStatusChange = async (id: number | string, newStatus: "active" | "inactive" | "pending") => {
+  const handleStatusChange = async (id: string | number, newStatus: "active" | "inactive" | "pending") => {
     try {
       await updateDoc(doc(db, "vendorApplications", id.toString()), {
         status: newStatus

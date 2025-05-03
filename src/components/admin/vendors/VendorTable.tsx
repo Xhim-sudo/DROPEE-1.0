@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Table, 
   TableBody, 
@@ -22,7 +22,7 @@ import { Vendor } from './VendorTypes';
 interface VendorTableProps {
   filteredVendors: Vendor[];
   handleEditVendor: (vendor: Vendor) => void;
-  handleStatusChange: (id: number, status: "active" | "inactive" | "pending") => void;
+  handleStatusChange: (id: string | number, status: "active" | "inactive" | "pending") => void;
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -76,7 +76,7 @@ const VendorTable: React.FC<VendorTableProps> = ({
           ) : (
             filteredVendors.map((vendor) => (
               <TableRow 
-                key={vendor.id} 
+                key={vendor.id.toString()} 
                 className={vendor.status === 'pending' ? 'bg-yellow-50' : ''}
               >
                 <TableCell className="font-medium">{vendor.name}</TableCell>
