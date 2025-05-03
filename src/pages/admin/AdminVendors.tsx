@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,8 +10,8 @@ import SearchVendors from '@/components/admin/vendors/SearchVendors';
 import VendorDialog, { vendorFormSchema, VendorFormValues } from '@/components/admin/vendors/VendorDialog';
 import { Vendor } from '@/components/admin/vendors/VendorTypes';
 
-// Mock data for vendors
-const mockVendors = [
+// Mock data for vendors with properly typed status values
+const mockVendors: Vendor[] = [
   { 
     id: 1, 
     name: 'Organic Farms', 
@@ -93,7 +92,7 @@ const AdminVendors = () => {
       vendor.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleStatusChange = (id: number, newStatus: string) => {
+  const handleStatusChange = (id: number, newStatus: "active" | "inactive" | "pending") => {
     setVendors(vendors.map(vendor => 
       vendor.id === id ? {...vendor, status: newStatus} : vendor
     ));
@@ -123,7 +122,7 @@ const AdminVendors = () => {
 
   const onSubmitAdd = (data: VendorFormValues) => {
     // Create a new vendor with the form data
-    const newVendor = {
+    const newVendor: Vendor = {
       id: Date.now(), // Generate a unique ID
       name: data.name,
       owner: data.owner,

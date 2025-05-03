@@ -17,22 +17,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { MoreVertical, Check, X, ChevronLeft, ChevronRight } from "lucide-react";
-
-type Vendor = {
-  id: number;
-  name: string;
-  owner: string;
-  email: string;
-  phone: string;
-  products: number;
-  status: string;
-  dateJoined: string;
-};
+import { Vendor } from './VendorTypes';
 
 interface VendorTableProps {
   filteredVendors: Vendor[];
   handleEditVendor: (vendor: Vendor) => void;
-  handleStatusChange: (id: number, status: string) => void;
+  handleStatusChange: (id: number, status: "active" | "inactive" | "pending") => void;
 }
 
 const VendorTable: React.FC<VendorTableProps> = ({
@@ -40,7 +30,7 @@ const VendorTable: React.FC<VendorTableProps> = ({
   handleEditVendor,
   handleStatusChange
 }) => {
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: "active" | "inactive" | "pending") => {
     switch(status) {
       case 'active':
         return <Badge className="bg-green-500">Active</Badge>;
