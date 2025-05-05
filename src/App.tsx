@@ -45,6 +45,7 @@ import AdminServices from "./pages/admin/AdminServices";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminUpdates from "./pages/admin/AdminUpdates";
 import AdminDeliveryFactors from "./pages/admin/AdminDeliveryFactors";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ const App = () => (
               <Route path="categories" element={<AdminCategories />} />
               <Route path="updates" element={<AdminUpdates />} />
               <Route path="delivery-factors" element={<AdminDeliveryFactors />} />
+              <Route path="notifications" element={<AdminNotifications />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
             

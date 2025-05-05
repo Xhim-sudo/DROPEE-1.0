@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Home, Search, X, Menu, MoreVertical } from 'lucide-react';
+import { ShoppingCart, Home, Search, X, Menu, MoreVertical, Bell } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import {
   DropdownMenu,
@@ -12,11 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { getTotalItems } = useCart();
+  // For demo purposes only, we'll use a static number
+  const notificationCount = 2;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -72,6 +75,16 @@ const Navbar = () => {
             </Button>
           </Link>
           
+          {/* Notification Bell */}
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell size={20} />
+            {notificationCount > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-theme-purple text-white text-xs flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Button>
+          
           {/* Kebab Menu for Vendor/Admin */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -106,6 +119,16 @@ const Navbar = () => {
               )}
             </Button>
           </Link>
+          
+          {/* Mobile Notification Bell */}
+          <Button variant="ghost" size="icon" className="relative mr-2">
+            <Bell size={20} />
+            {notificationCount > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-theme-purple text-white text-xs flex items-center justify-center">
+                {notificationCount}
+              </span>
+            )}
+          </Button>
           
           {/* Mobile Kebab Menu */}
           <DropdownMenu>
