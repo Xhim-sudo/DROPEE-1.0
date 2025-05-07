@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, Loader2 } from 'lucide-react';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
+import { app } from '@/config/firebase';
+import { createNotification } from '@/utils/notificationUtils';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Service {
   id: string;
@@ -27,39 +41,11 @@ interface Service {
 
 const AdminServices = () => {
   const { toast } = useToast();
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      name: 'Cash Delivery',
-      icon: '💰',
-      description: 'We deliver cash to your doorstep securely and quickly.',
-      basePrice: 150
-    },
-    {
-      id: '2',
-      name: 'Parcel Delivery',
-      icon: '📦',
-      description: 'Send packages across town with our reliable delivery service.',
-      basePrice: 100
-    },
-    {
-      id: '3',
-      name: 'Grocery Delivery',
-      icon: '🧺',
-      description: 'Get your groceries delivered right to your door.',
-      basePrice: 50
-    },
-    {
-      id: '4',
-      name: 'Medicine Delivery',
-      icon: '💊',
-      description: 'Urgent medicine delivery within 90 minutes.',
-      basePrice: 80
-    }
-  ]);
-
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [currentService, setCurrentService] = useState<Service>({
     id: '',
     name: '',
@@ -67,10 +53,41 @@ const AdminServices = () => {
     description: '',
     basePrice: 0
   });
+  const db = getFirestore(app);
+
+  useEffect(() => {
+    const servicesQuery = query(collection(db, "services"), orderBy("name"));
+    
+    const unsubscribe = onSnapshot(servicesQuery, (snapshot) => {
+      const servicesList: Service[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name,
+          icon: data.icon,
+          description: data.description,
+          basePrice: data.basePrice || 0
+        };
+      });
+      
+      setServices(servicesList);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching services:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load services. Please try again later.",
+        variant: "destructive"
+      });
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [db, toast]);
 
   const handleAddService = () => {
     setCurrentService({
-      id: Date.now().toString(),
+      id: '',
       name: '',
       icon: '',
       description: '',
@@ -84,29 +101,77 @@ const AdminServices = () => {
     setEditDialogOpen(true);
   };
 
-  const handleDeleteService = (id: string) => {
-    setServices(services.filter(service => service.id !== id));
-    toast({
-      title: "Service Deleted",
-      description: "The service has been successfully deleted.",
-    });
+  const handleDeleteService = async (id: string, name: string) => {
+    try {
+      setIsProcessing(true);
+      await deleteDoc(doc(db, "services", id));
+      
+      await createNotification(
+        'system_alert',
+        'Service Removed',
+        `The "${name}" service has been removed from the platform.`
+      );
+      
+      toast({
+        title: "Service Deleted",
+        description: "The service has been successfully deleted.",
+      });
+    } catch (error) {
+      console.error("Error deleting service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the service. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleSaveService = (isNew: boolean) => {
-    if (isNew) {
-      setServices([...services, currentService]);
-      setAddDialogOpen(false);
+  const handleSaveService = async (isNew: boolean) => {
+    try {
+      setIsProcessing(true);
+      
+      if (isNew) {
+        const { id, ...serviceData } = currentService;
+        const docRef = await addDoc(collection(db, "services"), serviceData);
+        
+        await createNotification(
+          'system_alert',
+          'New Service Added',
+          `A new service "${currentService.name}" has been added to the platform.`
+        );
+        
+        setAddDialogOpen(false);
+        toast({
+          title: "Service Added",
+          description: "New service has been successfully added.",
+        });
+      } else {
+        const { id, ...serviceData } = currentService;
+        await updateDoc(doc(db, "services", id), serviceData);
+        
+        await createNotification(
+          'system_alert',
+          'Service Updated',
+          `The "${currentService.name}" service has been updated.`
+        );
+        
+        setEditDialogOpen(false);
+        toast({
+          title: "Service Updated",
+          description: "The service has been successfully updated.",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving service:", error);
       toast({
-        title: "Service Added",
-        description: "New service has been successfully added.",
+        title: "Error",
+        description: `Failed to ${isNew ? 'add' : 'update'} the service. Please try again.`,
+        variant: "destructive"
       });
-    } else {
-      setServices(services.map(service => service.id === currentService.id ? currentService : service));
-      setEditDialogOpen(false);
-      toast({
-        title: "Service Updated",
-        description: "The service has been successfully updated.",
-      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -148,35 +213,58 @@ const AdminServices = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Icon</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Base Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell className="text-2xl">{service.icon}</TableCell>
-                    <TableCell className="font-medium">{service.name}</TableCell>
-                    <TableCell>{service.description.slice(0, 50)}...</TableCell>
-                    <TableCell>₹{service.basePrice}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditService(service)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteService(service.id)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 text-theme-purple animate-spin" />
+                <span className="ml-2">Loading services...</span>
+              </div>
+            ) : services.length === 0 ? (
+              <Alert>
+                <AlertDescription>
+                  No services found. Create your first service by clicking the "Add Service" button.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Icon</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Base Price</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {services.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell className="text-2xl">{service.icon}</TableCell>
+                      <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell>{service.description.length > 50 ? `${service.description.slice(0, 50)}...` : service.description}</TableCell>
+                      <TableCell>₹{service.basePrice}</TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEditService(service)}
+                          disabled={isProcessing}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteService(service.id, service.name)}
+                          disabled={isProcessing}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -195,6 +283,7 @@ const AdminServices = () => {
                 name="name" 
                 value={currentService.name}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -205,6 +294,7 @@ const AdminServices = () => {
                 value={currentService.icon}
                 onChange={handleInputChange}
                 placeholder="Paste an emoji here"
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -215,6 +305,7 @@ const AdminServices = () => {
                 rows={4}
                 value={currentService.description}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -225,12 +316,16 @@ const AdminServices = () => {
                 type="number"
                 value={currentService.basePrice.toString()}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => handleSaveService(true)}>Add Service</Button>
+            <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={isProcessing}>Cancel</Button>
+            <Button onClick={() => handleSaveService(true)} disabled={isProcessing}>
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Service
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -249,6 +344,7 @@ const AdminServices = () => {
                 name="name" 
                 value={currentService.name}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -258,6 +354,7 @@ const AdminServices = () => {
                 name="icon" 
                 value={currentService.icon}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -268,6 +365,7 @@ const AdminServices = () => {
                 rows={4}
                 value={currentService.description}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
             <div className="space-y-2">
@@ -278,12 +376,16 @@ const AdminServices = () => {
                 type="number"
                 value={currentService.basePrice.toString()}
                 onChange={handleInputChange}
+                disabled={isProcessing}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={() => handleSaveService(false)}>Save Changes</Button>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={isProcessing}>Cancel</Button>
+            <Button onClick={() => handleSaveService(false)} disabled={isProcessing}>
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

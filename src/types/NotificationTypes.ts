@@ -3,7 +3,8 @@ export type NotificationType =
   | 'vendor_application'
   | 'order_update'
   | 'payment_issue'
-  | 'system_alert';
+  | 'system_alert'
+  | 'service_update';
 
 export interface Notification {
   id: string;
