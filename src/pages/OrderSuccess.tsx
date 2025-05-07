@@ -22,15 +22,16 @@ const OrderSuccess = () => {
           <h1 className="text-2xl font-bold mb-4">Order Placed Successfully!</h1>
           
           <p className="mb-6 text-muted-foreground">
-            Thanks for your order. You will receive a WhatsApp message shortly with your order details and delivery updates.
+            Thanks for your order. Your order details have been sent to the vendor via WhatsApp. They will contact you shortly to confirm and process your order.
           </p>
           
           <div className="p-4 bg-muted rounded-md mb-6 text-left">
             <h3 className="font-medium mb-2">What happens next?</h3>
             <ol className="list-decimal pl-5 text-sm space-y-2">
-              <li>The vendor will contact you via WhatsApp to confirm your order.</li>
+              <li>The vendor will confirm your order details and availability.</li>
               <li>You'll receive updates about your order preparation and delivery status.</li>
-              <li>Have your cash ready for payment upon delivery.</li>
+              <li>Have your payment ready according to your selected payment method.</li>
+              <li>Please keep your phone handy to coordinate delivery or pickup.</li>
             </ol>
           </div>
           

@@ -12,7 +12,7 @@ const Checkout = () => {
       <main className="flex-grow container py-8">
         <PageHeader 
           title="Checkout" 
-          description="Complete your order with just a few steps"
+          description="Complete your order and our system will connect you with vendors directly via WhatsApp"
         />
         <CheckoutContainer />
       </main>

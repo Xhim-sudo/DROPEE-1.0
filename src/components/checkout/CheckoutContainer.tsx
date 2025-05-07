@@ -13,10 +13,14 @@ import { useCart } from '@/context/CartContext';
 import CustomerInfoForm from './CustomerInfoForm';
 import DeliveryPaymentOptions from './DeliveryPaymentOptions';
 import OrderSummary from './OrderSummary';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { app } from '@/config/firebase';
+import { createNotification } from '@/utils/notificationUtils';
 
 const CheckoutContainer: React.FC = () => {
   const navigate = useNavigate();
   const { items, getSubtotal, clearCart } = useCart();
+  const db = getFirestore(app);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -61,7 +65,22 @@ const CheckoutContainer: React.FC = () => {
     setUpiId(value);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Function to send WhatsApp message
+  const sendWhatsAppMessage = (phone: string, orderId: string, orderDetails: string) => {
+    // Format the phone number (remove any non-digit characters)
+    const formattedPhone = phone.replace(/\D/g, '');
+    
+    // Prepare the WhatsApp message
+    const message = encodeURIComponent(`New Order #${orderId}:\n\n${orderDetails}`);
+    
+    // Create WhatsApp URL
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${message}`;
+    
+    // Open WhatsApp in a new window
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields based on delivery option
@@ -84,34 +103,99 @@ const CheckoutContainer: React.FC = () => {
       return;
     }
 
-    // Prepare order data for WhatsApp message
-    const orderData = {
-      customer: {
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.deliveryOption === 'delivery' ? formData.address : 'Pickup at store'
-      },
-      items: items.map(item => `${item.quantity}x ${item.name} (₹${(item.price * item.quantity).toFixed(2)})`),
-      subtotal: getSubtotal().toFixed(2),
-      deliveryFee: formData.deliveryOption === 'delivery' ? deliveryFees.totalFee.toFixed(2) : '0.00',
-      total: (formData.deliveryOption === 'delivery' ? getSubtotal() + deliveryFees.totalFee : getSubtotal()).toFixed(2),
-      deliveryOption: formData.deliveryOption,
-      paymentMethod: formData.paymentMethod,
-      instructions: formData.instructions || 'None'
-    };
-
-    console.log("Order data for WhatsApp:", orderData);
-    
-    // In a real implementation, this would send the order to a backend or directly to WhatsApp
-    toast({
-      title: "Order placed successfully!",
-      description: "You will receive a WhatsApp message with your order details.",
-    });
-    
-    // Clear the cart and redirect to success page
-    clearCart();
-    navigate('/order-success');
+    try {
+      // Prepare order data
+      const subtotal = getSubtotal();
+      const deliveryFee = formData.deliveryOption === 'delivery' ? deliveryFees.totalFee : 0;
+      const total = subtotal + deliveryFee;
+      
+      const orderData = {
+        customer: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email || '',
+          address: formData.deliveryOption === 'delivery' ? formData.address : 'Pickup at store'
+        },
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          vendorId: item.vendorId,
+          vendorName: item.vendorName
+        })),
+        subtotal,
+        deliveryFee,
+        total,
+        deliveryOption: formData.deliveryOption,
+        paymentMethod: formData.paymentMethod,
+        instructions: formData.instructions || 'None',
+        status: 'Pending',
+        paymentStatus: formData.paymentMethod === 'cash' ? 'Pending' : 'Paid',
+        createdAt: serverTimestamp()
+      };
+      
+      // Save order to Firestore
+      const orderRef = await addDoc(collection(db, "orders"), orderData);
+      const orderId = orderRef.id;
+      
+      // Create notification for admin
+      await createNotification(
+        'new_order',
+        'New Order Received',
+        `Order #${orderId} has been placed by ${formData.name}`,
+        `/admin/orders`,
+        { orderId }
+      );
+      
+      // Group items by vendor
+      const vendorOrders: Record<string, any[]> = {};
+      items.forEach(item => {
+        if (!vendorOrders[item.vendorId]) {
+          vendorOrders[item.vendorId] = [];
+        }
+        vendorOrders[item.vendorId].push(item);
+      });
+      
+      // Send WhatsApp messages to each vendor
+      Object.entries(vendorOrders).forEach(([vendorId, vendorItems]) => {
+        // In a real app, you would fetch the vendor's phone from the database
+        // For now, using a mock phone number
+        const vendorPhone = "+919876543210"; // This should be fetched from vendor data
+        
+        // Create order details for this vendor
+        const orderDetails = `
+Customer: ${formData.name}
+Contact: ${formData.phone}
+Address: ${formData.deliveryOption === 'delivery' ? formData.address : 'Pickup at store'}
+Items:
+${vendorItems.map(item => `- ${item.quantity}x ${item.name} (₹${(item.price * item.quantity).toFixed(2)})`).join('\n')}
+Subtotal: ₹${vendorItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+Delivery: ${formData.deliveryOption} - ₹${formData.deliveryOption === 'delivery' ? deliveryFees.totalFee.toFixed(2) : '0.00'}
+Payment: ${formData.paymentMethod}
+Instructions: ${formData.instructions || 'None'}
+`.trim();
+        
+        // Send WhatsApp message
+        sendWhatsAppMessage(vendorPhone, orderId, orderDetails);
+      });
+      
+      toast({
+        title: "Order placed successfully!",
+        description: "You will receive a WhatsApp message with your order details.",
+      });
+      
+      // Clear the cart and redirect to success page
+      clearCart();
+      navigate('/order-success');
+    } catch (error) {
+      console.error("Error processing order:", error);
+      toast({
+        title: "Order failed",
+        description: "There was an error processing your order. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Redirect to home if cart is empty

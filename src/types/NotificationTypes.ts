@@ -4,7 +4,8 @@ export type NotificationType =
   | 'order_update'
   | 'payment_issue'
   | 'system_alert'
-  | 'service_update';
+  | 'service_update'
+  | 'new_order';
 
 export interface Notification {
   id: string;
