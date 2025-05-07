@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const VendorProducts = () => {
   const { toast } = useToast();
-  // Sample products data with additional fields
+  // Sample products data with additional fields including images
   const [products, setProducts] = useState<Product[]>([
     { 
       id: "P001", 
@@ -23,7 +23,11 @@ const VendorProducts = () => {
       stock: 120,
       status: "Active",
       hasOffer: true,
-      offerEnds: "2023-06-30"
+      offerEnds: "2023-06-30",
+      images: [
+        "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&q=80&w=2070",
+        "https://images.unsplash.com/photo-1570913149827-d2ac84ab3f9a?auto=format&fit=crop&q=80&w=2070"
+      ]
     },
     { 
       id: "P002", 
@@ -34,7 +38,10 @@ const VendorProducts = () => {
       stock: 45,
       status: "Active",
       hasOffer: false,
-      offerEnds: null
+      offerEnds: null,
+      images: [
+        "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=2832"
+      ]
     },
     { 
       id: "P003", 
@@ -45,7 +52,10 @@ const VendorProducts = () => {
       stock: 80,
       status: "Active",
       hasOffer: true,
-      offerEnds: "2023-06-25"
+      offerEnds: "2023-06-25",
+      images: [
+        "https://images.unsplash.com/photo-1618580929348-9e8d57d98560?auto=format&fit=crop&q=80&w=1916"
+      ]
     },
     { 
       id: "P004", 
@@ -56,7 +66,8 @@ const VendorProducts = () => {
       stock: 30,
       status: "Low Stock",
       hasOffer: false,
-      offerEnds: null
+      offerEnds: null,
+      images: []
     },
     { 
       id: "P005", 
@@ -67,7 +78,8 @@ const VendorProducts = () => {
       stock: 0,
       status: "Out of Stock",
       hasOffer: false,
-      offerEnds: null
+      offerEnds: null,
+      images: []
     },
     { 
       id: "P006", 
@@ -78,7 +90,10 @@ const VendorProducts = () => {
       stock: 65,
       status: "Active",
       hasOffer: true,
-      offerEnds: "2023-07-15"
+      offerEnds: "2023-07-15",
+      images: [
+        "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&q=80&w=1374"
+      ]
     },
   ]);
 

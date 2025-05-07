@@ -9,4 +9,5 @@ export interface Product {
   status: string;
   hasOffer: boolean;
   offerEnds: string | null;
+  images: string[]; // Array of image URLs
 }
