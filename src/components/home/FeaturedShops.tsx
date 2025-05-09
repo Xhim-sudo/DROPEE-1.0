@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import VendorCard from '@/components/VendorCard';
 import { vendors } from '@/data/mockData';
+import { Link } from 'react-router-dom';
 
 const FeaturedShops = () => {
   // Filter featured vendors
@@ -13,9 +14,11 @@ const FeaturedShops = () => {
       <div className="container">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Featured Shops</h2>
-          <Button variant="link" className="text-theme-purple">
-            View All
-          </Button>
+          <Link to="/shops">
+            <Button variant="link" className="text-theme-purple">
+              View All
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
