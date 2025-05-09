@@ -2,17 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import ServiceCard from '@/components/ServiceCard';
+import { Link } from 'react-router-dom';
 import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { app } from '@/config/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Service {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  basePrice: number;
-}
+import { Service } from '@/types/ServiceTypes';
 
 const ServicesSection = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -48,9 +42,11 @@ const ServicesSection = () => {
       <div className="container">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Our Services</h2>
-          <Button variant="link" className="text-theme-purple">
-            View All
-          </Button>
+          <Link to="/services">
+            <Button variant="link" className="text-theme-purple">
+              View All
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">

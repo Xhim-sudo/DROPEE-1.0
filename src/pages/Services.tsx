@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader';
 import ServiceCard from '@/components/ServiceCard';
@@ -9,18 +9,33 @@ import Footer from '@/components/layout/Footer';
 import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { app } from '@/config/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Service {
-  id: string;
-  name: string;
-  icon: string;
-  description: string;
-  basePrice: number;
-}
+import { Service } from '@/types/ServiceTypes';
+import { useToast } from '@/components/ui/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Plus } from 'lucide-react';
 
 const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  // In a real app, this would check auth status and admin role
+  useEffect(() => {
+    // Mock admin check - in a real app, this would be from Firebase Auth
+    const checkIfAdmin = () => {
+      // This is just a simple mock to demonstrate UI switching
+      // In a real app you'd check the user's role from Firebase Auth
+      const urlParams = new URLSearchParams(window.location.search);
+      const adminMode = urlParams.get('admin') === 'true';
+      setIsAdmin(adminMode);
+    };
+    
+    checkIfAdmin();
+  }, []);
 
   useEffect(() => {
     const db = getFirestore(app);
@@ -47,6 +62,32 @@ const Services = () => {
     return () => unsubscribe();
   }, []);
 
+  const handleAddService = () => {
+    navigate('/admin/services');
+  };
+
+  const handleEditService = (id: string) => {
+    navigate(`/admin/services?editId=${id}`);
+  };
+
+  const handleDeletePrompt = (id: string) => {
+    setSelectedServiceId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedServiceId) {
+      // In a real implementation, you would delete from Firestore here
+      // For now, we'll just show a toast
+      toast({
+        title: "Service deleted",
+        description: "The service has been permanently removed.",
+      });
+      setDeleteDialogOpen(false);
+      navigate('/admin/services');
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -66,10 +107,17 @@ const Services = () => {
         
         {/* Services Grid */}
         <div className="container py-10">
-          <PageHeader 
-            title="Our Services" 
-            description="Choose from our range of special delivery services"
-          />
+          <div className="flex justify-between items-center mb-6">
+            <PageHeader 
+              title="Our Services" 
+              description="Choose from our range of special delivery services"
+            />
+            {isAdmin && (
+              <Button onClick={handleAddService} className="bg-theme-purple hover:bg-theme-purple-dark">
+                <Plus className="h-4 w-4 mr-2" /> Add Service
+              </Button>
+            )}
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {loading ? (
@@ -92,6 +140,9 @@ const Services = () => {
                   icon={service.icon}
                   description={service.description}
                   basePrice={service.basePrice}
+                  isAdmin={isAdmin}
+                  onEdit={handleEditService}
+                  onDelete={handleDeletePrompt}
                 />
               ))
             ) : (
@@ -239,6 +290,24 @@ const Services = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the service and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
