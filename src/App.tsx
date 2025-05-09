@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -47,66 +48,69 @@ import AdminUpdates from "./pages/admin/AdminUpdates";
 import AdminDeliveryFactors from "./pages/admin/AdminDeliveryFactors";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 
+// Create a new QueryClient instance directly
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CartProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/categories" element={<Categories />} />
-            <Route path="/shops" element={<Shops />} />
-            <Route path="/shop/:id" element={<ShopDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/services" element={<Services />} />
-            
-            {/* Vendor Authentication Routes */}
-            <Route path="/vendor/signup" element={<VendorSignup />} />
-            <Route path="/vendor/login" element={<VendorLogin />} />
-            <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
-            
-            {/* Vendor Panel Routes */}
-            <Route path="/vendor" element={<VendorLayout />}>
-              <Route path="dashboard" element={<VendorDashboard />} />
-              <Route path="products" element={<VendorProducts />} />
-              <Route path="orders" element={<VendorOrders />} />
-              <Route path="deliveries" element={<VendorDeliveries />} />
-              <Route path="customers" element={<VendorCustomers />} />
-              <Route path="notifications" element={<VendorNotifications />} />
-              <Route path="settings" element={<VendorSettings />} />
-            </Route>
-            
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            
-            {/* Admin Panel Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="vendors" element={<AdminVendors />} />
-              <Route path="customers" element={<AdminCustomers />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="orders" element={<AdminOrders />} />
-              <Route path="services" element={<AdminServices />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="updates" element={<AdminUpdates />} />
-              <Route path="delivery-factors" element={<AdminDeliveryFactors />} />
-              <Route path="notifications" element={<AdminNotifications />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </CartProvider>
-  </QueryClientProvider>
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <CartProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/shops" element={<Shops />} />
+              <Route path="/shop/:id" element={<ShopDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/services" element={<Services />} />
+              
+              {/* Vendor Authentication Routes */}
+              <Route path="/vendor/signup" element={<VendorSignup />} />
+              <Route path="/vendor/login" element={<VendorLogin />} />
+              <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
+              
+              {/* Vendor Panel Routes */}
+              <Route path="/vendor" element={<VendorLayout />}>
+                <Route path="dashboard" element={<VendorDashboard />} />
+                <Route path="products" element={<VendorProducts />} />
+                <Route path="orders" element={<VendorOrders />} />
+                <Route path="deliveries" element={<VendorDeliveries />} />
+                <Route path="customers" element={<VendorCustomers />} />
+                <Route path="notifications" element={<VendorNotifications />} />
+                <Route path="settings" element={<VendorSettings />} />
+              </Route>
+              
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              
+              {/* Admin Panel Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="vendors" element={<AdminVendors />} />
+                <Route path="customers" element={<AdminCustomers />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="services" element={<AdminServices />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="updates" element={<AdminUpdates />} />
+                <Route path="delivery-factors" element={<AdminDeliveryFactors />} />
+                <Route path="notifications" element={<AdminNotifications />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </CartProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
