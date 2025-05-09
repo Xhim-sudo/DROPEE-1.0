@@ -17,6 +17,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import Services from "./pages/Services";
+import ServiceDetail from "./pages/ServiceDetail";
 import NotFound from "./pages/NotFound";
 
 // Vendor Pages
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/order-success" element={<OrderSuccess />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/service-detail/:id" element={<ServiceDetail />} />
               
               {/* Vendor Authentication Routes */}
               <Route path="/vendor/signup" element={<VendorSignup />} />

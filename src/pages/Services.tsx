@@ -18,10 +18,12 @@ import DeleteServiceDialog from '@/components/services/DeleteServiceDialog';
 
 const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -55,6 +57,7 @@ const Services = () => {
         };
       });
       setServices(servicesList);
+      setFilteredServices(servicesList);
       setLoading(false);
     }, (error) => {
       console.error("Error fetching services:", error);
@@ -63,6 +66,19 @@ const Services = () => {
 
     return () => unsubscribe();
   }, []);
+
+  // Filter services when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredServices(services);
+    } else {
+      const filtered = services.filter(service => 
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        service.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredServices(filtered);
+    }
+  }, [searchQuery, services]);
 
   const handleAddService = () => {
     navigate('/admin/services');
@@ -90,6 +106,10 @@ const Services = () => {
     }
   };
 
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -112,11 +132,13 @@ const Services = () => {
           </div>
           
           <ServicesList 
-            services={services} 
+            services={filteredServices}
             loading={loading}
             isAdmin={isAdmin}
             onEdit={handleEditService}
             onDelete={handleDeletePrompt}
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
           />
         </div>
         

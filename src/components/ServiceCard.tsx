@@ -55,9 +55,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             </Button>
           </div>
         ) : (
-          <Link to={`/services/${id}`} className="w-full">
+          <Link to={`/service-detail/${id}`} className="w-full">
             <Button className="w-full bg-theme-purple hover:bg-theme-purple-dark">
-              Select
+              View Details
             </Button>
           </Link>
         )}
