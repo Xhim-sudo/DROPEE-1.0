@@ -44,7 +44,7 @@ const HeroSection = () => {
         </form>
         
         <div className="flex flex-wrap justify-center gap-4">
-          <Link to="/shop">
+          <Link to="/shops">
             <Button size="lg" className="bg-white text-theme-purple hover:bg-gray-100">
               Browse Shops
             </Button>
