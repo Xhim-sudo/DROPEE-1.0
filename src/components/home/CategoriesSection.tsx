@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import CategoryCard from '@/components/CategoryCard';
 import { categories } from '@/data/mockData';
+import { Link } from 'react-router-dom';
 
 const CategoriesSection = () => {
   return (
@@ -10,9 +11,11 @@ const CategoriesSection = () => {
       <div className="container">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Browse Categories</h2>
-          <Button variant="link" className="text-theme-purple">
-            View All
-          </Button>
+          <Link to="/categories">
+            <Button variant="link" className="text-theme-purple">
+              View All
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
