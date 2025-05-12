@@ -1,34 +1,26 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/config/firebase';
 import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  User
-} from 'firebase/auth';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
-import { app } from '@/config/firebase';
+  getUserProfile, 
+  updateUserRole, 
+  loginUser, 
+  registerUser, 
+  logoutUser,
+  UserProfile
+} from '@/services/userService';
 
 // Role types
 export type UserRole = 'user' | 'vendor' | 'admin';
 
-// User information structure
-interface UserInfo {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  role: UserRole;
-}
-
 // Authentication context interface
 interface AuthContextType {
   currentUser: User | null;
-  userInfo: UserInfo | null;
+  userInfo: UserProfile | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  register: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, name: string) => Promise<User>;
   logout: () => Promise<void>;
   isAdmin: boolean;
   isVendor: boolean;
@@ -56,79 +48,42 @@ export const useAuth = () => useContext(AuthContext);
 // Auth provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  
-  // Function to fetch user role from Firestore
-  const fetchUserRole = async (user: User) => {
-    try {
-      // First check the users collection for role
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      
-      if (userDocSnap.exists() && userDocSnap.data().role) {
-        return userDocSnap.data().role as UserRole;
-      }
-      
-      // Check admin collection
-      const adminDocRef = doc(db, 'admins', user.uid);
-      const adminDocSnap = await getDoc(adminDocRef);
-      
-      if (adminDocSnap.exists()) {
-        return 'admin' as UserRole;
-      }
-      
-      // Check vendor collection
-      const vendorDocRef = doc(db, 'vendors', user.uid);
-      const vendorDocSnap = await getDoc(vendorDocRef);
-      
-      if (vendorDocSnap.exists()) {
-        return 'vendor' as UserRole;
-      }
-      
-      // Default to regular user
-      return 'user' as UserRole;
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-      return 'user' as UserRole;
-    }
-  };
-
-  // Function to set user role
-  const setUserRole = async (uid: string, role: UserRole) => {
-    try {
-      await setDoc(doc(db, 'users', uid), { role }, { merge: true });
-    } catch (error) {
-      console.error('Error setting user role:', error);
-      throw error;
-    }
-  };
   
   // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
-          const role = await fetchUserRole(user);
-          
+          // Fetch user profile from Firestore
+          const profile = await getUserProfile(user.uid);
           setCurrentUser(user);
-          setUserInfo({
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            role: role
-          });
+          
+          if (profile) {
+            setUserInfo(profile);
+          } else {
+            // If profile doesn't exist, create minimal info
+            setUserInfo({
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              role: 'user',
+              createdAt: null,
+              updatedAt: null
+            });
+          }
         } catch (error) {
           console.error("Error fetching user data:", error);
+          // Set minimal user info on error
           setCurrentUser(user);
           setUserInfo({
             uid: user.uid,
             email: user.email,
             displayName: user.displayName,
-            role: 'user'
+            role: 'user',
+            createdAt: null,
+            updatedAt: null
           });
         }
       } else {
@@ -142,21 +97,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
   
-  // Login function
-  const login = (email: string, password: string): Promise<User> => {
-    return signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => userCredential.user);
+  // Register function
+  const register = (email: string, password: string, name: string): Promise<User> => {
+    return registerUser(email, password, name);
   };
   
-  // Register function
-  const register = (email: string, password: string): Promise<User> => {
-    return createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => userCredential.user);
+  // Login function
+  const login = (email: string, password: string): Promise<User> => {
+    return loginUser(email, password);
   };
   
   // Logout function
   const logout = (): Promise<void> => {
-    return signOut(auth);
+    return logoutUser();
+  };
+  
+  // Function to set user role
+  const setUserRole = async (uid: string, role: UserRole): Promise<void> => {
+    try {
+      await updateUserRole(uid, role);
+      
+      // Update local state if this is the current user
+      if (userInfo && userInfo.uid === uid) {
+        setUserInfo({
+          ...userInfo,
+          role: role
+        });
+      }
+    } catch (error) {
+      console.error("Error setting user role:", error);
+      throw error;
+    }
   };
   
   // Role check properties

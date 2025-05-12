@@ -2,9 +2,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -25,5 +25,16 @@ const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// Set up Firestore security rules for development
+// These rules allow read/write access without authentication during development
+// In production, you should secure your database with proper rules
+if (import.meta.env.DEV) {
+  console.log("Using development mode for Firebase");
+  // You can uncomment these lines if you want to use Firebase emulators
+  // connectAuthEmulator(auth, "http://localhost:9099");
+  // connectFirestoreEmulator(db, "localhost", 8080);
+  // connectStorageEmulator(storage, "localhost", 9199);
+}
 
 export { app, analytics, auth, db, storage };

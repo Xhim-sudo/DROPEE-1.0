@@ -7,8 +7,6 @@ import { Label } from "@/components/ui/label";
 import { ShoppingBag } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +17,7 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   
-  const { register, setUserRole } = useAuth();
+  const { register } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -47,38 +45,15 @@ const Register = () => {
     }
     
     try {
-      // Register new user
-      const userCredential = await register(formData.email, formData.password);
-      const user = userCredential;
+      // Register new user with name
+      await register(formData.email, formData.password, formData.name);
       
-      try {
-        // Create user profile in Firestore
-        await setDoc(doc(db, 'users', user.uid), {
-          name: formData.name,
-          email: formData.email,
-          role: 'user',
-          createdAt: new Date().toISOString()
-        });
-        
-        // Set the user role in the auth context
-        await setUserRole(user.uid, 'user');
-        
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created successfully.",
-        });
-        
-        navigate('/');
-      } catch (firestoreError) {
-        console.error("Error writing to Firestore:", firestoreError);
-        // Even if Firestore write fails, the user is still registered with Firebase Auth
-        toast({
-          title: "Registration partially successful",
-          description: "Your account was created but some profile information may be missing. You can update your profile later.",
-          variant: "default",
-        });
-        navigate('/');
-      }
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created successfully.",
+      });
+      
+      navigate('/');
     } catch (error: any) {
       console.error("Registration error:", error);
       
