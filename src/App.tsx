@@ -6,8 +6,16 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
+import { AuthProvider } from '@/context/AuthContext';
+import ProtectedRoute from '@/components/routes/ProtectedRoute';
 
-// Pages
+// Auth Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import Unauthorized from './pages/auth/Unauthorized';
+
+// Public Pages
 import Index from "./pages/Index";
 import Categories from "./pages/Categories";
 import CategoryProducts from "./pages/CategoryProducts";
@@ -34,9 +42,6 @@ import VendorNotifications from "./pages/vendor/VendorNotifications";
 import VendorSettings from "./pages/vendor/VendorSettings";
 
 // Admin Pages
-import AdminLogin from "./pages/admin/AdminLogin";
-
-// Admin Panel
 import AdminLayout from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminVendors from "./pages/admin/AdminVendors";
@@ -56,63 +61,75 @@ const queryClient = new QueryClient();
 const App = () => (
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/categories/:categoryId" element={<CategoryProducts />} />
-              <Route path="/shops" element={<Shops />} />
-              <Route path="/shop/:id" element={<ShopDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/service-detail/:id" element={<ServiceDetail />} />
-              
-              {/* Vendor Authentication Routes */}
-              <Route path="/vendor/signup" element={<VendorSignup />} />
-              <Route path="/vendor/login" element={<VendorLogin />} />
-              <Route path="/vendor/forgot-password" element={<VendorForgotPassword />} />
-              
-              {/* Vendor Panel Routes */}
-              <Route path="/vendor" element={<VendorLayout />}>
-                <Route path="dashboard" element={<VendorDashboard />} />
-                <Route path="products" element={<VendorProducts />} />
-                <Route path="orders" element={<VendorOrders />} />
-                <Route path="deliveries" element={<VendorDeliveries />} />
-                <Route path="customers" element={<VendorCustomers />} />
-                <Route path="notifications" element={<VendorNotifications />} />
-                <Route path="settings" element={<VendorSettings />} />
-              </Route>
-              
-              {/* Admin Routes */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              
-              {/* Admin Panel Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="vendors" element={<AdminVendors />} />
-                <Route path="customers" element={<AdminCustomers />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="services" element={<AdminServices />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="updates" element={<AdminUpdates />} />
-                <Route path="delivery-factors" element={<AdminDeliveryFactors />} />
-                <Route path="notifications" element={<AdminNotifications />} />
-                <Route path="settings" element={<AdminSettings />} />
-              </Route>
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/categories/:categoryId" element={<CategoryProducts />} />
+                <Route path="/shops" element={<Shops />} />
+                <Route path="/shop/:id" element={<ShopDetail />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/service-detail/:id" element={<ServiceDetail />} />
+                
+                {/* Authentication Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/unauthorized" element={<Unauthorized />} />
+                
+                {/* User Routes (require authentication) */}
+                <Route element={<ProtectedRoute />}>
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-success" element={<OrderSuccess />} />
+                </Route>
+                
+                {/* Vendor Authentication Routes */}
+                <Route path="/vendor/signup" element={<VendorSignup />} />
+                
+                {/* Vendor Panel Routes */}
+                <Route element={<ProtectedRoute requiredRole="vendor" redirectPath="/login" />}>
+                  <Route path="/vendor" element={<VendorLayout />}>
+                    <Route path="dashboard" element={<VendorDashboard />} />
+                    <Route path="products" element={<VendorProducts />} />
+                    <Route path="orders" element={<VendorOrders />} />
+                    <Route path="deliveries" element={<VendorDeliveries />} />
+                    <Route path="customers" element={<VendorCustomers />} />
+                    <Route path="notifications" element={<VendorNotifications />} />
+                    <Route path="settings" element={<VendorSettings />} />
+                  </Route>
+                </Route>
+                
+                {/* Admin Panel Routes */}
+                <Route element={<ProtectedRoute requiredRole="admin" redirectPath="/login" />}>
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="vendors" element={<AdminVendors />} />
+                    <Route path="customers" element={<AdminCustomers />} />
+                    <Route path="products" element={<AdminProducts />} />
+                    <Route path="orders" element={<AdminOrders />} />
+                    <Route path="services" element={<AdminServices />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="updates" element={<AdminUpdates />} />
+                    <Route path="delivery-factors" element={<AdminDeliveryFactors />} />
+                    <Route path="notifications" element={<AdminNotifications />} />
+                    <Route path="settings" element={<AdminSettings />} />
+                  </Route>
+                </Route>
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

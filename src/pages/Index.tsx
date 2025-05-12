@@ -1,32 +1,32 @@
 
 import React from 'react';
+import MainNavbar from '@/components/layout/MainNavbar';
+import Footer from '@/components/layout/Footer';
 import HeroSection from '@/components/home/HeroSection';
-import TrendingProducts from '@/components/home/TrendingProducts';
 import CategoriesSection from '@/components/home/CategoriesSection';
+import HowItWorks from '@/components/home/HowItWorks';
+import TrendingProducts from '@/components/home/TrendingProducts';
 import FeaturedShops from '@/components/home/FeaturedShops';
+import ServicesSection from '@/components/home/ServicesSection';
 import UpcomingProducts from '@/components/home/UpcomingProducts';
 import BlogSection from '@/components/home/BlogSection';
-import HowItWorks from '@/components/home/HowItWorks';
-import ServicesSection from '@/components/home/ServicesSection';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 
 const Index = () => {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-grow">
+    <>
+      <MainNavbar />
+      <main>
         <HeroSection />
-        <TrendingProducts />
         <CategoriesSection />
-        <FeaturedShops />
-        <UpcomingProducts />
-        <ServicesSection />
         <HowItWorks />
+        <TrendingProducts />
+        <FeaturedShops />
+        <ServicesSection />
+        <UpcomingProducts />
         <BlogSection />
       </main>
       <Footer />
-    </div>
+    </>
   );
 };
 

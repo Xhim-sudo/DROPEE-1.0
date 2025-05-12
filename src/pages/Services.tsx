@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader';
-import Navbar from '@/components/layout/Navbar';
+import MainNavbar from '@/components/layout/MainNavbar';
 import Footer from '@/components/layout/Footer';
 import { getFirestore, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { app } from '@/config/firebase';
@@ -15,32 +15,19 @@ import ServicesList from '@/components/services/ServicesList';
 import ServiceFeatures from '@/components/services/ServiceFeatures';
 import ServicesPricingTable from '@/components/services/ServicesPricingTable';
 import DeleteServiceDialog from '@/components/services/DeleteServiceDialog';
+import { useAuth } from '@/context/AuthContext';
 
 const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   
-  // In a real app, this would check auth status and admin role
-  useEffect(() => {
-    // Mock admin check - in a real app, this would be from Firebase Auth
-    const checkIfAdmin = () => {
-      // This is just a simple mock to demonstrate UI switching
-      // In a real app you'd check the user's role from Firebase Auth
-      const urlParams = new URLSearchParams(window.location.search);
-      const adminMode = urlParams.get('admin') === 'true';
-      setIsAdmin(adminMode);
-    };
-    
-    checkIfAdmin();
-  }, []);
-
   useEffect(() => {
     const db = getFirestore(app);
     const servicesQuery = query(collection(db, "services"), orderBy("name"));
@@ -112,7 +99,7 @@ const Services = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      <MainNavbar />
       <main className="flex-grow">
         {/* Hero Section */}
         <ServicesHero />
