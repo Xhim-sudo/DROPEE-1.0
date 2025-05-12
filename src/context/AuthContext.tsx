@@ -8,7 +8,7 @@ import {
   signOut,
   User
 } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { app } from '@/config/firebase';
 
 // Role types
@@ -33,6 +33,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isVendor: boolean;
   isUser: boolean;
+  setUserRole: (uid: string, role: UserRole) => Promise<void>;
 }
 
 // Create the auth context with default values
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthContextType>({
   isAdmin: false,
   isVendor: false,
   isUser: false,
+  setUserRole: () => Promise.reject(new Error('AuthContext not initialized')),
 });
 
 // Custom hook to use the auth context
@@ -63,6 +65,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to fetch user role from Firestore
   const fetchUserRole = async (user: User) => {
     try {
+      // First check the users collection for role
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      
+      if (userDocSnap.exists() && userDocSnap.data().role) {
+        return userDocSnap.data().role as UserRole;
+      }
+      
       // Check admin collection
       const adminDocRef = doc(db, 'admins', user.uid);
       const adminDocSnap = await getDoc(adminDocRef);
@@ -86,20 +96,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return 'user' as UserRole;
     }
   };
+
+  // Function to set user role
+  const setUserRole = async (uid: string, role: UserRole) => {
+    try {
+      await setDoc(doc(db, 'users', uid), { role }, { merge: true });
+    } catch (error) {
+      console.error('Error setting user role:', error);
+      throw error;
+    }
+  };
   
   // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const role = await fetchUserRole(user);
-        
-        setCurrentUser(user);
-        setUserInfo({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          role: role
-        });
+        try {
+          const role = await fetchUserRole(user);
+          
+          setCurrentUser(user);
+          setUserInfo({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            role: role
+          });
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setCurrentUser(user);
+          setUserInfo({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            role: 'user'
+          });
+        }
       } else {
         setCurrentUser(null);
         setUserInfo(null);
@@ -144,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin,
     isVendor,
     isUser,
+    setUserRole,
   };
   
   return (

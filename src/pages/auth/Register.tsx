@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { ShoppingBag } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/context/AuthContext';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { app } from '@/config/firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -19,10 +19,9 @@ const Register = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   
-  const { register } = useAuth();
+  const { register, setUserRole } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const db = getFirestore(app);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,25 +51,50 @@ const Register = () => {
       const userCredential = await register(formData.email, formData.password);
       const user = userCredential;
       
-      // Create user profile in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        name: formData.name,
-        email: formData.email,
-        role: 'user',
-        createdAt: new Date()
-      });
-      
-      toast({
-        title: "Registration successful",
-        description: "Your account has been created successfully.",
-      });
-      
-      navigate('/');
+      try {
+        // Create user profile in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          name: formData.name,
+          email: formData.email,
+          role: 'user',
+          createdAt: new Date().toISOString()
+        });
+        
+        // Set the user role in the auth context
+        await setUserRole(user.uid, 'user');
+        
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created successfully.",
+        });
+        
+        navigate('/');
+      } catch (firestoreError) {
+        console.error("Error writing to Firestore:", firestoreError);
+        // Even if Firestore write fails, the user is still registered with Firebase Auth
+        toast({
+          title: "Registration partially successful",
+          description: "Your account was created but some profile information may be missing. You can update your profile later.",
+          variant: "default",
+        });
+        navigate('/');
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
+      
+      let errorMessage = "An error occurred during registration.";
+      
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email is already registered. Please use a different email or try logging in.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Invalid email address. Please check your email and try again.";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password is too weak. Please use a stronger password.";
+      }
+      
       toast({
         title: "Registration failed",
-        description: error.message || "An error occurred during registration.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
